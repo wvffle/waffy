@@ -55,7 +55,6 @@ desktop_entry *read_desktop_file(const char *file_path, const char *gtk_launch_n
 
 desktop_entry_batch *find_desktop_files(const char *directory) {
     DIR* dir_handle = opendir(directory);
-    desktop_entry_batch* batch = deb_constructor();
 
     // Skip non-existant directory
     if (dir_handle == NULL) {
@@ -63,6 +62,7 @@ desktop_entry_batch *find_desktop_files(const char *directory) {
     }
 
     struct dirent* dp;
+    desktop_entry_batch* batch = deb_constructor();
     while ((dp = readdir(dir_handle)) != NULL) {
         if (!str_ends_with(dp->d_name, ".desktop")) continue;
 
