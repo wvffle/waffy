@@ -41,6 +41,6 @@ size_t deb_unshift (desktop_entry_batch* batch, desktop_entry* entry);
 desktop_entry* deb_pop (desktop_entry_batch* batch);
 desktop_entry* deb_shift (desktop_entry_batch* batch);
 
-desktop_entry_batch* deb_concat (desktop_entry_batch* target, desktop_entry_batch* source);
+void deb_concat (desktop_entry_batch* target, desktop_entry_batch* source);
 
 #endif //WAFFY_DESKTOP_ENTRY_H

@@ -92,10 +92,13 @@ desktop_entry_batch *find_all_desktop_files() {
     };
 
 
-    desktop_entry_batch* all_entries = NULL;
+    desktop_entry_batch* all_entries = deb_constructor();
+
     for (size_t i = 0; i < DESKTOP_ENTRY_DIRS_NUM; ++i) {
         desktop_entry_batch* entries = find_desktop_files(desktop_entry_dirs[i]);
-        all_entries = deb_concat(all_entries, entries);
+        if (entries == NULL) continue;
+
+        deb_concat(all_entries, entries);
     }
 
     free(user_dir);

@@ -78,14 +78,31 @@ desktop_entry *deb_shift(desktop_entry_batch *batch) {
     return entry;
 }
 
-// TODO: To hell with those memory leaks >:c
-//       Give me normal classes with normal
-//       constructors and deconstructors
-//       Or a language with a GC
-desktop_entry_batch *deb_concat(desktop_entry_batch *target, desktop_entry_batch *source) {
-    if (target == NULL) return source;
-    if (source == NULL) return target;
-    if (source->length == 0) return target;
+void deb_concat(desktop_entry_batch *target, desktop_entry_batch *source) {
+    if (target == NULL) {
+        fprintf(stderr, "[ERROR] target is NULL");
+        return;
+    }
+
+    if (source == NULL) {
+        return;
+    };
+
+    if (source->length == 0) {
+        deb_destructor(source);
+        return;
+    }
+
+    if (target->length == 0) {
+        target->first = source->first;
+        target->last = source->last;
+        target->length = source->length;
+
+        source->first = NULL;
+        source->last = NULL;
+        deb_destructor(source);
+        return;
+    }
 
     source->first->prev = target->last;
     target->last->next = source->first;
@@ -96,10 +113,12 @@ desktop_entry_batch *deb_concat(desktop_entry_batch *target, desktop_entry_batch
     source->first = NULL;
     source->last = NULL;
     deb_destructor(source);
-
-    return target;
 }
 
+// TODO: To hell with those memory leaks >:c
+//       Give me normal classes with normal
+//       constructors and deconstructors
+//       Or a language with a GC
 desktop_entry_batch *deb_constructor() {
     desktop_entry_batch* batch = malloc(sizeof(desktop_entry_batch));
 
