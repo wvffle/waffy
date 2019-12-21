@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdkwayland.h>
@@ -35,7 +34,7 @@ int main (int argc, char* argv[]) {
     gtk_layer_set_layer (GTK_WINDOW(window), GTK_LAYER_SHELL_LAYER_TOP);
     gtk_layer_set_keyboard_interactivity (GTK_WINDOW(window), TRUE);
 
-    // HACK: Set fullscreen
+    // HACK: Set window fullscreen
     gtk_layer_set_anchor (GTK_WINDOW(window), 0, TRUE);
     gtk_layer_set_anchor (GTK_WINDOW(window), 1, TRUE);
     gtk_layer_set_anchor (GTK_WINDOW(window), 2, TRUE);
@@ -48,6 +47,16 @@ int main (int argc, char* argv[]) {
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
     gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
 
+    // Set window style
+    GtkCssProvider* css_provider = gtk_css_provider_new();
+    if (gtk_css_provider_load_from_path(css_provider, "assets/main.css", NULL)) {
+        gtk_style_context_add_provider(gtk_widget_get_style_context(window),
+                GTK_STYLE_PROVIDER(css_provider),
+                GTK_STYLE_PROVIDER_PRIORITY_USER);
+    }
+
+
+    // Add event handlers
     g_signal_connect(window, "destroy", G_CALLBACK(window_destroy), NULL);
     g_signal_connect(window, "key_press_event", G_CALLBACK(key_pressed), NULL);
 

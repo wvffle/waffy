@@ -3,6 +3,8 @@ project(waffy C)
 
 set(CMAKE_C_STANDARD 11)
 
+file(COPY assets DESTINATION "${CMAKE_BINARY_DIR}")
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3_WAYLAND REQUIRED gtk+-wayland-3.0)
 pkg_check_modules(GTK3_LAYER_SHELL REQUIRED gtk-layer-shell-0)
