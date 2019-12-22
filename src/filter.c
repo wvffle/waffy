@@ -41,6 +41,7 @@ desktop_entry_batch *filter_case_insensitive(desktop_entry_batch *hay, const cha
 
     desktop_entry_batch* res = deb_constructor();
     while (curr != NULL) {
+
         if (strcasestr(curr->entry->name, needle) != NULL) {
             deb_push(res, curr->entry);
         }
