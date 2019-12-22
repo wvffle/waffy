@@ -34,6 +34,11 @@ desktop_entry *read_desktop_file(const char *file_path, const char *gtk_launch_n
             // Skip malformed field
             if (!value) continue;
 
+            if (!strcmp(key, "NoDisplay") && !strcmp(value, "true")) {
+                free(entry);
+                return NULL;
+            }
+
             if (!strcmp(key, "Name")) {
                 strcpy(entry->name, value);
                 continue;
@@ -74,7 +79,7 @@ desktop_entry_batch *find_desktop_files(const char *directory) {
         memcpy(gtk_launch_name, dp->d_name, len);
 
         desktop_entry* entry = read_desktop_file(file_path, (const char *) gtk_launch_name);
-        deb_push(batch, entry);
+        if (entry != NULL) deb_push(batch, entry);
 
         free(file_path);
     }
