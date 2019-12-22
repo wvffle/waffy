@@ -36,23 +36,30 @@ void update_apps (desktop_entry_batch* apps) {
     int n = 0;
     desktop_entry_batch_node* curr = apps->first;
     while (curr != NULL) {
-        GtkWidget* app = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+        GtkWidget* app = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 17);
         gtk_widget_set_halign(app, GTK_ALIGN_START);
 
         GtkIconTheme* theme = gtk_icon_theme_get_default();
         GtkWidget* icon = NULL;
+        GdkPixbuf* pixbuf = NULL;
 
-        if (gtk_icon_theme_has_icon(theme, curr->entry->icon)) {
-            GdkPixbuf* pixbuf = gtk_icon_theme_load_icon(theme, curr->entry->icon, ICON_SIZE, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
-            icon = gtk_image_new_from_pixbuf(pixbuf);
-        } else if (is_path(curr->entry->icon)) {
+        if (is_path(curr->entry->icon)) {
             GtkWidget* image = gtk_image_new_from_file(curr->entry->icon);
-            GdkPixbuf* pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
+            pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
+        } else {
+            const gchar** icons = g_themed_icon_get_names((GThemedIcon *) g_themed_icon_new(curr->entry->icon));
+            GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, icons, ICON_SIZE, GTK_ICON_LOOKUP_FORCE_SIZE);
 
-            if (GDK_IS_PIXBUF(pixbuf)) {
-                pixbuf = gdk_pixbuf_scale_simple(pixbuf, ICON_SIZE, ICON_SIZE, GDK_INTERP_TILES);
-                icon = gtk_image_new_from_pixbuf(pixbuf);
+            if (info != NULL) {
+                GtkWidget* image = gtk_image_new_from_file(gtk_icon_info_get_filename(info));
+                pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
+
             }
+        }
+
+        if (GDK_IS_PIXBUF(pixbuf)) {
+            pixbuf = gdk_pixbuf_scale_simple(pixbuf, ICON_SIZE, ICON_SIZE, GDK_INTERP_TILES);
+            icon = gtk_image_new_from_pixbuf(pixbuf);
         }
 
         if (icon != NULL) {
@@ -104,11 +111,6 @@ gboolean key_released (GtkWidget* window, GdkEventKey* event, gpointer data) {
 
 int main (int argc, char* argv[]) {
     all_desktop_entries = find_all_desktop_files();
-    desktop_entry_batch_node* curr = all_desktop_entries->first;
-
-    while (curr != NULL) {
-        curr = curr->next;
-    }
 
     gtk_init(&argc, &argv);
 
@@ -124,7 +126,6 @@ int main (int argc, char* argv[]) {
     gtk_layer_set_anchor (GTK_WINDOW(window), 3, TRUE);
 
     gtk_widget_realize(window);
-    gtk_widget_set_name(window, "window");
 
     // Set window options
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
@@ -148,6 +149,7 @@ int main (int argc, char* argv[]) {
     gtk_box_pack_start(search_box, search_label, FALSE, FALSE, 0);
 
     search_input = gtk_text_view_new();
+    gtk_widget_set_name(search_input, "search");
     gtk_box_pack_start(search_box, search_input, TRUE, TRUE, 0);
 
     // Apps grid layout
@@ -156,19 +158,22 @@ int main (int argc, char* argv[]) {
     for (size_t i = 0; i < COLUMNS; ++i) {
         gtk_grid_insert_column(app_grid, i);
     }
+    gtk_grid_set_column_spacing(app_grid, 17);
+    gtk_grid_set_row_spacing(app_grid, 17);
+    gtk_widget_set_name(GTK_WIDGET(app_grid), "apps");
+
+    gtk_widget_set_halign(app_grid, GTK_ALIGN_CENTER);
 
     update_apps(all_desktop_entries);
 
     // Set window style
+    // TODO: Respect pywal
     GtkCssProvider* css_provider = gtk_css_provider_new();
-    if (gtk_css_provider_load_from_path(css_provider, "assets/main.css", NULL)) {
-        gtk_style_context_add_provider(gtk_widget_get_style_context(window),
-                                       GTK_STYLE_PROVIDER(css_provider),
-                                       GTK_STYLE_PROVIDER_PRIORITY_USER);
 
-        gtk_style_context_add_provider(gtk_widget_get_style_context(app_grid),
-                                       GTK_STYLE_PROVIDER(css_provider),
-                                       GTK_STYLE_PROVIDER_PRIORITY_USER);
+    if (gtk_css_provider_load_from_path(css_provider, "../assets/main.css", NULL)) {
+        gtk_style_context_add_provider_for_screen(gtk_widget_get_screen(window),
+                                                  GTK_STYLE_PROVIDER(css_provider),
+                                                  GTK_STYLE_PROVIDER_PRIORITY_USER);
     }
 
     gtk_window_set_title(GTK_WINDOW(window), "Waffy");

@@ -1,3 +1,20 @@
 window {
     background: rgba(0, 0, 0, .4);
 }
+
+label {
+    color: #fff;
+}
+
+textview text {
+    color: #fff;
+}
+
+* {
+    background-color: transparent;
+    border: none;
+}
+
+#apps:hover {
+    background: #0af;
+}
