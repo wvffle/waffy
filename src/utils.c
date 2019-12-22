@@ -28,3 +28,18 @@ char* get_user_home () {
 
     return homedir;
 }
+
+int str_fuzzy_match(const char *hay, const char *needle) {
+    char tokenized_needle[strlen(needle)];
+    strcpy(tokenized_needle, needle);
+
+    char* token = strtok(tokenized_needle, " ");
+    char* str = (char*) hay;
+
+    while (token != NULL) {
+        if ((str = strcasestr(str, token)) == NULL) return 0;
+        token = strtok(NULL, " ");
+    }
+
+    return 1;
+}
