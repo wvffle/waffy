@@ -8,6 +8,7 @@
 #include "filter.h"
 
 #define COLUMNS 4
+#define ICON_SIZE 48
 
 desktop_entry_batch* all_desktop_entries = NULL;
 GtkGrid* app_grid = NULL;
@@ -35,11 +36,36 @@ void update_apps (desktop_entry_batch* apps) {
     int n = 0;
     desktop_entry_batch_node* curr = apps->first;
     while (curr != NULL) {
-        GtkWidget* app = gtk_label_new(curr->entry->name);
+        GtkWidget* app = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+        gtk_widget_set_halign(app, GTK_ALIGN_START);
+
+        GtkIconTheme* theme = gtk_icon_theme_get_default();
+        GtkWidget* icon = NULL;
+
+        if (gtk_icon_theme_has_icon(theme, curr->entry->icon)) {
+            GdkPixbuf* pixbuf = gtk_icon_theme_load_icon(theme, curr->entry->icon, ICON_SIZE, GTK_ICON_LOOKUP_FORCE_SIZE, NULL);
+            icon = gtk_image_new_from_pixbuf(pixbuf);
+        } else if (is_path(curr->entry->icon)) {
+            GtkWidget* image = gtk_image_new_from_file(curr->entry->icon);
+            GdkPixbuf* pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
+
+            if (GDK_IS_PIXBUF(pixbuf)) {
+                pixbuf = gdk_pixbuf_scale_simple(pixbuf, ICON_SIZE, ICON_SIZE, GDK_INTERP_TILES);
+                icon = gtk_image_new_from_pixbuf(pixbuf);
+            }
+        }
+
+        if (icon != NULL) {
+            gtk_box_pack_start(GTK_BOX(app), icon, TRUE, TRUE, 0);
+        }
+
+        GtkWidget* name = gtk_label_new(curr->entry->name);
+        gtk_box_pack_start(GTK_BOX(app), name, TRUE, TRUE, 0);
+
         uint col = n % COLUMNS;
         uint row = n / COLUMNS;
         gtk_grid_attach(app_grid, app, col, row, 1, 1);
-        gtk_widget_show(app);
+        gtk_widget_show_all(app);
 
         curr = curr->next;
         n += 1;

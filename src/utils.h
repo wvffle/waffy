@@ -20,4 +20,6 @@ char* str_concat (const char* string1, const char* string2);
 
 char* get_user_home ();
 
+uint is_path (const char* path);
+
 #endif //WAFFY_UTILS_H

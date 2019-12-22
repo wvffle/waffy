@@ -43,3 +43,13 @@ int str_fuzzy_match(const char *hay, const char *needle) {
 
     return 1;
 }
+
+uint is_path(const char *path) {
+    FILE* fp;
+    if ((fp = fopen(path, "r")) != NULL) {
+        fclose(fp);
+        return 1;
+    }
+
+    return 0;
+}
