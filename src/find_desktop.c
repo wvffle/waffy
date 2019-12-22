@@ -35,12 +35,12 @@ desktop_entry *read_desktop_file(const char *file_path, const char *gtk_launch_n
             if (!value) continue;
 
             if (!strcmp(key, "Name")) {
-                de_set_name(entry, value);
+                strcpy(entry->name, value);
                 continue;
             }
 
             if (!strcmp(key, "Icon")) {
-                de_set_icon(entry, value);
+                strcpy(entry->icon, value);
                 continue;
             }
 

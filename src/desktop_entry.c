@@ -115,10 +115,6 @@ void deb_concat(desktop_entry_batch *target, desktop_entry_batch *source) {
     deb_destructor(source);
 }
 
-// TODO: To hell with those memory leaks >:c
-//       Give me normal classes with normal
-//       constructors and deconstructors
-//       Or a language with a GC
 desktop_entry_batch *deb_constructor() {
     desktop_entry_batch* batch = malloc(sizeof(desktop_entry_batch));
 
@@ -127,14 +123,6 @@ desktop_entry_batch *deb_constructor() {
     batch->length = 0;
 
     return batch;
-}
-
-void de_set_name(desktop_entry *target, const char *name) {
-    target->name = (char*) name;
-}
-
-void de_set_icon(desktop_entry *target, const char *icon) {
-    target->icon = (char*) icon;
 }
 
 void deb_destructor(desktop_entry_batch *batch) {
@@ -155,9 +143,25 @@ void deb_destructor(desktop_entry_batch *batch) {
     free(batch);
 }
 
+void deb_destructor_no_entry(desktop_entry_batch *batch) {
+    if (batch->length) {
+        desktop_entry_batch_node* curr = batch->first;
+
+        while (curr != NULL) {
+            desktop_entry_batch_node* next = curr->next;
+            free(curr);
+
+            curr = next;
+        }
+
+    }
+
+    free(batch);
+}
+
 desktop_entry *de_constructor(const char* gtk_launch_name) {
     desktop_entry* entry = malloc(sizeof(desktop_entry));
-    entry->gtk_launch_name = (char*) gtk_launch_name;
-    entry->name = NULL;
-    entry->icon = NULL;
+    strcpy(entry->gtk_launch_name, gtk_launch_name);
+
+    return entry;
 }

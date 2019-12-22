@@ -11,9 +11,9 @@
 #include <string.h>
 
 typedef struct desktop_entry {
-    char* gtk_launch_name;
-    char* name;
-    char* icon;
+    char gtk_launch_name[FILENAME_MAX];
+    char name[32];
+    char icon[PATH_MAX];
 } desktop_entry;
 
 typedef struct desktop_entry_batch_node {
@@ -28,12 +28,12 @@ typedef struct desktop_entry_batch {
     struct desktop_entry_batch_node* last;
 } desktop_entry_batch;
 
-desktop_entry* de_constructor ();
-void de_set_name (desktop_entry* target, const char* name);
-void de_set_icon (desktop_entry* target, const char* icon);
+desktop_entry* de_constructor (const char* gtk_launch_name);
 
 desktop_entry_batch* deb_constructor ();
 void deb_destructor (desktop_entry_batch* batch);
+void deb_destructor_no_entry(desktop_entry_batch *batch);
+
 
 size_t deb_push (desktop_entry_batch* batch, desktop_entry* entry);
 size_t deb_unshift (desktop_entry_batch* batch, desktop_entry* entry);
