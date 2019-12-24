@@ -17,7 +17,12 @@ GtkGrid* app_grid = NULL;
 GtkGrid* fav_grid = NULL;
 GtkWidget *search_input;
 uint current_items = 0;
-uint current_item = 0;
+int current_item = 0;
+int current_item_kb = 0;
+
+// HACK: Get over with the fact that after changing CSS class, button gets rehovered
+int last_current_item = 0;
+int last_current_item_kb = 0;
 
 GdkCursor* arrow;
 GdkCursor* pointer;
@@ -28,33 +33,44 @@ void window_destroy (GtkWidget* widget, gpointer *data) {
 }
 
 void update_current () {
+    int idx = -1;
+
+    if (current_item != last_current_item) {
+        last_current_item = current_item;
+        last_current_item_kb = current_item;
+        current_item_kb = current_item;
+        idx = current_item;
+    } else if (current_item_kb != last_current_item_kb) {
+        last_current_item_kb = current_item_kb;
+        idx = current_item_kb;
+    }
+
+    if (idx == -1) return;
     for (size_t i = 0; i < current_items; ++i) {
         GtkWidget* app = gtk_grid_get_child_at(app_grid, i % COLUMNS, i / COLUMNS);
+        if (app == NULL) continue;
         GtkStyleContext* ctx = gtk_widget_get_style_context(app);
 
         if (gtk_style_context_has_class(ctx, "active") == TRUE) {
             gtk_style_context_remove_class(ctx, "active");
         }
 
-        if (i == current_item) {
+        if (i == idx) {
             gtk_style_context_add_class(ctx, "active");
         }
     }
 }
 
-// TODO: Disable when key pressed
 void app_enter (GtkWidget* widget, GdkEvent* event, int* data) {
     gdk_window_set_cursor(gtk_widget_get_window(widget), pointer);
     current_item = *data;
     update_current();
-    free(data);
 }
 
 void app_leave (GtkWidget* widget, GdkEvent* event, int* data) {
     gdk_window_set_cursor(gtk_widget_get_window(widget), arrow);
     current_item = *data;
     update_current();
-    free(data);
 }
 
 void app_clicked (GtkButton* button, desktop_entry* entry) {
@@ -85,9 +101,16 @@ void update_apps (desktop_entry_batch* apps) {
         gtk_container_remove(GTK_CONTAINER(app_grid), app);
     }
 
+    int old_current_items = current_items;
     if (apps == NULL || (current_items = apps->length) == 0) {
         current_items = 0;
         return;
+    }
+
+    if (old_current_items != current_items) {
+        current_item = 0;
+        current_item_kb = 0;
+        update_current();
     }
 
     int n = 0;
@@ -100,6 +123,7 @@ void update_apps (desktop_entry_batch* apps) {
         if (is_path(curr->entry->icon)) {
             GtkWidget* image = gtk_image_new_from_file(curr->entry->icon);
             pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
+//            gtk_widget_destroy(image);
         } else {
             const gchar** icons = g_themed_icon_get_names((GThemedIcon *) g_themed_icon_new(curr->entry->icon));
             GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, icons, ICON_SIZE, GTK_ICON_LOOKUP_FORCE_SIZE);
@@ -107,8 +131,8 @@ void update_apps (desktop_entry_batch* apps) {
             if (info != NULL) {
                 GtkWidget* image = gtk_image_new_from_file(gtk_icon_info_get_filename(info));
                 pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
-
             }
+
         }
 
         if (GDK_IS_PIXBUF(pixbuf)) {
@@ -169,32 +193,32 @@ gboolean key_pressed (GtkWidget* window, GdkEventKey* event, gpointer data) {
     }
 
     if (event->keyval == GDK_KEY_Left) {
-        if (current_item == 0) return TRUE;
-        current_item -= 1;
-        update_current();
+        if (current_item_kb == 0) return TRUE;
+        current_item_kb -= 1;
+//        update_current();
         return TRUE;
     }
 
     if (event->keyval == GDK_KEY_Right) {
-        if (current_item == current_items) return TRUE;
-        current_item += 1;
-        update_current();
+        if (current_item_kb == current_items - 1) return TRUE;
+        current_item_kb += 1;
+//        update_current();
         return TRUE;
     }
 
     if (event->keyval == GDK_KEY_Up) {
-        current_item -= COLUMNS;
-        if (current_item < 0) current_item = 0;
+        current_item_kb -= COLUMNS;
+        if (current_item_kb < 0) current_item_kb += COLUMNS;
 
-        update_current();
+//        update_current();
         return TRUE;
     }
 
-    if (event->keyval == GDK_KEY_Up) {
-        current_item += COLUMNS;
-        if (current_item < current_items) current_item = current_items;
+    if (event->keyval == GDK_KEY_Down) {
+        current_item_kb += COLUMNS;
+        if (current_item_kb > current_items - 1) current_item_kb -= COLUMNS;
 
-        update_current();
+//        update_current();
         return TRUE;
     }
 
