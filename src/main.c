@@ -150,7 +150,6 @@ gboolean key_pressed (GtkWidget* window, GdkEventKey* event, gpointer data) {
     }
 
     if (event->keyval == GDK_KEY_Return) {
-        // TODO: Get first filtered app
         desktop_entry_batch* apps = filtered;
         if (apps == NULL) apps = all_desktop_entries;
 
