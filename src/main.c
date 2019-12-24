@@ -17,7 +17,7 @@ GtkGrid* fav_grid = NULL;
 GtkWidget *search_input;
 uint current_items = 0;
 
-void window_destroy (GtkWidget* window, gpointer data) {
+void window_destroy (GtkWidget* window, gpointer *data) {
     deb_destructor(all_desktop_entries);
     gtk_main_quit();
 }
@@ -27,14 +27,23 @@ void app_done (GObject* obj, GAsyncResult* result, gpointer data) {
 }
 
 void app_clicked (GtkButton* button, desktop_entry* entry) {
-    g_autoptr(GError) error = NULL;
     GDesktopAppInfo* info = g_desktop_app_info_new(entry->gtk_launch_name);
+
     if (info != NULL) {
-        g_app_info_launch(G_APP_INFO(info), NULL, NULL, NULL);
+        g_autoptr(GError) error = NULL;
+        g_app_info_launch(G_APP_INFO(info), NULL, NULL, &error);
+
+        if (error != NULL) {
+            g_error("Could not run program '%s': %s", entry->name, error->message);
+            window_destroy(NULL, NULL);
+            exit(EXIT_FAILURE);
+        }
+
+        window_destroy(NULL, NULL);
         exit(EXIT_SUCCESS);
     }
 
-
+    window_destroy(NULL, NULL);
     exit(EXIT_FAILURE);
 }
 
