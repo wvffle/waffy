@@ -3,6 +3,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkwayland.h>
 #include <gtk-layer-shell/gtk-layer-shell.h>
+#include <gio/gdesktopappinfo.h>
 
 #include "find_desktop.h"
 #include "filter.h"
@@ -21,6 +22,22 @@ void window_destroy (GtkWidget* window, gpointer data) {
     gtk_main_quit();
 }
 
+void app_done (GObject* obj, GAsyncResult* result, gpointer data) {
+//    if (g_app_info_launch_uris_finish())
+}
+
+void app_clicked (GtkButton* button, desktop_entry* entry) {
+    g_autoptr(GError) error = NULL;
+    GDesktopAppInfo* info = g_desktop_app_info_new(entry->gtk_launch_name);
+    if (info != NULL) {
+        g_app_info_launch(G_APP_INFO(info), NULL, NULL, NULL);
+        exit(EXIT_SUCCESS);
+    }
+
+
+    exit(EXIT_FAILURE);
+}
+
 void update_apps (desktop_entry_batch* apps) {
     // Reset grid
     for (size_t i = 0; i < current_items; ++i) {
@@ -36,8 +53,9 @@ void update_apps (desktop_entry_batch* apps) {
     int n = 0;
     desktop_entry_batch_node* curr = apps->first;
     while (curr != NULL) {
-        GtkWidget* app = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 17);
-        gtk_widget_set_halign(app, GTK_ALIGN_START);
+//        GtkWidget* app = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 17);
+//        gtk_widget_set_halign(app, GTK_ALIGN_START);
+
 
         GtkIconTheme* theme = gtk_icon_theme_get_default();
         GtkWidget* icon = NULL;
@@ -63,16 +81,30 @@ void update_apps (desktop_entry_batch* apps) {
         }
 
         if (icon != NULL) {
-            gtk_box_pack_start(GTK_BOX(app), icon, TRUE, TRUE, 0);
+//            gtk_box_pack_start(GTK_BOX(app), icon, TRUE, TRUE, 0);
+//            gtk_widget_set_halign(icon, GTK_ALIGN_START);
         }
 
+        GtkWidget* app = gtk_button_new_with_label(curr->entry->name);
+
+        if (icon != NULL) {
+            gtk_button_set_image(GTK_BUTTON(app), icon);
+            gtk_widget_set_halign(icon, GTK_ALIGN_START);
+        }
+
+        /*
         GtkWidget* name = gtk_label_new(curr->entry->name);
         gtk_box_pack_start(GTK_BOX(app), name, TRUE, TRUE, 0);
+//        gtk_label_set_xalign(GTK_LABEL(name), 0.0);
+        gtk_label_set_justify(GTK_LABEL(name), GTK_JUSTIFY_LEFT);
+        */
 
         uint col = n % COLUMNS;
         uint row = n / COLUMNS;
         gtk_grid_attach(app_grid, app, col, row, 1, 1);
         gtk_widget_show_all(app);
+
+        g_signal_connect(app, "clicked", G_CALLBACK(app_clicked), curr->entry);
 
         curr = curr->next;
         n += 1;

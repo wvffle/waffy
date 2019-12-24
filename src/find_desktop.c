@@ -74,12 +74,14 @@ desktop_entry_batch *find_desktop_files(const char *directory) {
         char* file_path = str_concat(directory, dp->d_name);
 
         // Remove .desktop from end
-        size_t len = strlen(dp->d_name) - 8;
-        char gtk_launch_name[len + 1];
-        strncpy(gtk_launch_name, dp->d_name, len);
-        gtk_launch_name[len] = '\0';
+//        size_t len = strlen(dp->d_name) - 8;
+//        char gtk_launch_name[len + 1];
+//        strncpy(gtk_launch_name, dp->d_name, len);
+//        gtk_launch_name[len] = '\0';
 
-        desktop_entry* entry = read_desktop_file(file_path, gtk_launch_name);
+        desktop_entry* entry = read_desktop_file(file_path, dp->d_name);
+
+//        desktop_entry* entry = read_desktop_file(file_path, gtk_launch_name);
         if (entry != NULL) deb_push(batch, entry);
 
         free(file_path);
