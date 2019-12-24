@@ -12,10 +12,12 @@
 #define ICON_SIZE 48
 
 desktop_entry_batch* all_desktop_entries = NULL;
+desktop_entry_batch* filtered = NULL;
 GtkGrid* app_grid = NULL;
 GtkGrid* fav_grid = NULL;
 GtkWidget *search_input;
 uint current_items = 0;
+uint current_item = 0;
 
 GdkCursor* arrow;
 GdkCursor* pointer;
@@ -25,12 +27,34 @@ void window_destroy (GtkWidget* widget, gpointer *data) {
     gtk_main_quit();
 }
 
-void app_enter (GtkWidget* widget, GdkEvent* event, gpointer* data) {
-    gdk_window_set_cursor(gtk_widget_get_window(widget), pointer);
+void update_current () {
+    for (size_t i = 0; i < current_items; ++i) {
+        GtkWidget* app = gtk_grid_get_child_at(app_grid, i % COLUMNS, i / COLUMNS);
+        GtkStyleContext* ctx = gtk_widget_get_style_context(app);
+
+        if (gtk_style_context_has_class(ctx, "active") == TRUE) {
+            gtk_style_context_remove_class(ctx, "active");
+        }
+
+        if (i == current_item) {
+            gtk_style_context_add_class(ctx, "active");
+        }
+    }
 }
 
-void app_leave (GtkWidget* widget, GdkEvent* event, gpointer* data) {
+// TODO: Disable when key pressed
+void app_enter (GtkWidget* widget, GdkEvent* event, int* data) {
+    gdk_window_set_cursor(gtk_widget_get_window(widget), pointer);
+    current_item = *data;
+    update_current();
+    free(data);
+}
+
+void app_leave (GtkWidget* widget, GdkEvent* event, int* data) {
     gdk_window_set_cursor(gtk_widget_get_window(widget), arrow);
+    current_item = *data;
+    update_current();
+    free(data);
 }
 
 void app_clicked (GtkButton* button, desktop_entry* entry) {
@@ -69,9 +93,6 @@ void update_apps (desktop_entry_batch* apps) {
     int n = 0;
     desktop_entry_batch_node* curr = apps->first;
     while (curr != NULL) {
-//        GtkWidget* app = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 17);
-
-
         GtkIconTheme* theme = gtk_icon_theme_get_default();
         GtkWidget* icon = NULL;
         GdkPixbuf* pixbuf = NULL;
@@ -95,39 +116,31 @@ void update_apps (desktop_entry_batch* apps) {
             icon = gtk_image_new_from_pixbuf(pixbuf);
         }
 
-        if (icon != NULL) {
-//            gtk_box_pack_start(GTK_BOX(app), icon, TRUE, TRUE, 0);
-//            gtk_widget_set_halign(icon, GTK_ALIGN_START);
-        }
-
         GtkWidget* app = gtk_button_new_with_label(curr->entry->name);
 
         if (icon != NULL) {
             gtk_button_set_image(GTK_BUTTON(app), icon);
             gtk_widget_set_halign(icon, GTK_ALIGN_START);
-//            gtk_button_set_image_position(GTK_BUTTON(app), GTK_POS_LEFT);
         }
 
         gtk_widget_set_hexpand(app, FALSE);
-        /*
-        GtkWidget* name = gtk_label_new(curr->entry->name);
-        gtk_box_pack_start(GTK_BOX(app), name, TRUE, TRUE, 0);
-//        gtk_label_set_xalign(GTK_LABEL(name), 0.0);
-        gtk_label_set_justify(GTK_LABEL(name), GTK_JUSTIFY_LEFT);
-        */
 
         uint col = n % COLUMNS;
         uint row = n / COLUMNS;
         gtk_grid_attach(app_grid, app, col, row, 1, 1);
         gtk_widget_show_all(app);
 
+        int* pos = malloc(sizeof(int));
+        memcpy(pos, &n, sizeof(int));
         g_signal_connect(app, "clicked", G_CALLBACK(app_clicked), curr->entry);
-        g_signal_connect(app, "enter-notify-event", G_CALLBACK(app_enter), NULL);
-        g_signal_connect(app, "leave-notify-event", G_CALLBACK(app_leave), NULL);
+        g_signal_connect(app, "enter-notify-event", G_CALLBACK(app_enter), pos);
+        g_signal_connect(app, "leave-notify-event", G_CALLBACK(app_leave), pos);
 
         curr = curr->next;
         n += 1;
     }
+
+    update_current();
 }
 
 gboolean key_pressed (GtkWidget* window, GdkEventKey* event, gpointer data) {
@@ -137,8 +150,52 @@ gboolean key_pressed (GtkWidget* window, GdkEventKey* event, gpointer data) {
     }
 
     if (event->keyval == GDK_KEY_Return) {
-        // TODO: Launch first app
-        window_destroy(window, data);
+        // TODO: Get first filtered app
+        desktop_entry_batch* apps = filtered;
+        if (apps == NULL) apps = all_desktop_entries;
+
+        desktop_entry_batch_node* curr = apps->first;
+        int n = 0;
+        while (curr != NULL) {
+            if (n == current_item) {
+                app_clicked(NULL, curr->entry);
+                return TRUE;
+            }
+
+            curr = curr->next;
+            n += 1;
+        }
+
+        return TRUE;
+    }
+
+    if (event->keyval == GDK_KEY_Left) {
+        if (current_item == 0) return TRUE;
+        current_item -= 1;
+        update_current();
+        return TRUE;
+    }
+
+    if (event->keyval == GDK_KEY_Right) {
+        if (current_item == current_items) return TRUE;
+        current_item += 1;
+        update_current();
+        return TRUE;
+    }
+
+    if (event->keyval == GDK_KEY_Up) {
+        current_item -= COLUMNS;
+        if (current_item < 0) current_item = 0;
+
+        update_current();
+        return TRUE;
+    }
+
+    if (event->keyval == GDK_KEY_Up) {
+        current_item += COLUMNS;
+        if (current_item < current_items) current_item = current_items;
+
+        update_current();
         return TRUE;
     }
 
@@ -152,7 +209,7 @@ gboolean key_released (GtkWidget* window, GdkEventKey* event, gpointer data) {
     gtk_text_buffer_get_bounds (buf, &start, &end);
 
     char* needle = gtk_text_buffer_get_text(buf, &start, &end, FALSE);
-    desktop_entry_batch* filtered = filter_apps(all_desktop_entries, needle, FUZZY);
+    filtered = filter_apps(all_desktop_entries, needle, FUZZY);
     update_apps(filtered);
 
     if (filtered != all_desktop_entries && filtered != NULL) {
@@ -167,7 +224,7 @@ int main (int argc, char* argv[]) {
 
     GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_layer_init_for_window(GTK_WINDOW(window));
-    gtk_layer_set_layer (GTK_WINDOW(window), GTK_LAYER_SHELL_LAYER_TOP);
+    gtk_layer_set_layer (GTK_WINDOW(window), GTK_LAYER_SHELL_LAYER_OVERLAY);
     gtk_layer_set_keyboard_interactivity (GTK_WINDOW(window), TRUE);
 
     // HACK: Set window fullscreen

@@ -19,6 +19,6 @@ textview text {
     background: rgba(255, 255, 255, .4);
 }
 
-#apps > button:hover {
+#apps > button.active {
     background: rgba(255, 255, 255, .6);
 }
