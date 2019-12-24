@@ -17,13 +17,20 @@ GtkGrid* fav_grid = NULL;
 GtkWidget *search_input;
 uint current_items = 0;
 
-void window_destroy (GtkWidget* window, gpointer *data) {
+GdkCursor* arrow;
+GdkCursor* pointer;
+
+void window_destroy (GtkWidget* widget, gpointer *data) {
     deb_destructor(all_desktop_entries);
     gtk_main_quit();
 }
 
-void app_done (GObject* obj, GAsyncResult* result, gpointer data) {
-//    if (g_app_info_launch_uris_finish())
+void app_enter (GtkWidget* widget, GdkEvent* event, gpointer* data) {
+    gdk_window_set_cursor(gtk_widget_get_window(widget), pointer);
+}
+
+void app_leave (GtkWidget* widget, GdkEvent* event, gpointer* data) {
+    gdk_window_set_cursor(gtk_widget_get_window(widget), arrow);
 }
 
 void app_clicked (GtkButton* button, desktop_entry* entry) {
@@ -63,7 +70,6 @@ void update_apps (desktop_entry_batch* apps) {
     desktop_entry_batch_node* curr = apps->first;
     while (curr != NULL) {
 //        GtkWidget* app = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 17);
-//        gtk_widget_set_halign(app, GTK_ALIGN_START);
 
 
         GtkIconTheme* theme = gtk_icon_theme_get_default();
@@ -99,8 +105,10 @@ void update_apps (desktop_entry_batch* apps) {
         if (icon != NULL) {
             gtk_button_set_image(GTK_BUTTON(app), icon);
             gtk_widget_set_halign(icon, GTK_ALIGN_START);
+//            gtk_button_set_image_position(GTK_BUTTON(app), GTK_POS_LEFT);
         }
 
+        gtk_widget_set_hexpand(app, FALSE);
         /*
         GtkWidget* name = gtk_label_new(curr->entry->name);
         gtk_box_pack_start(GTK_BOX(app), name, TRUE, TRUE, 0);
@@ -114,6 +122,8 @@ void update_apps (desktop_entry_batch* apps) {
         gtk_widget_show_all(app);
 
         g_signal_connect(app, "clicked", G_CALLBACK(app_clicked), curr->entry);
+        g_signal_connect(app, "enter-notify-event", G_CALLBACK(app_enter), NULL);
+        g_signal_connect(app, "leave-notify-event", G_CALLBACK(app_leave), NULL);
 
         curr = curr->next;
         n += 1;
@@ -216,6 +226,10 @@ int main (int argc, char* argv[]) {
                                                   GTK_STYLE_PROVIDER(css_provider),
                                                   GTK_STYLE_PROVIDER_PRIORITY_USER);
     }
+
+    GdkDisplay* display = gtk_widget_get_display(window);
+    arrow = GDK_CURSOR(gdk_cursor_new_from_name(display, "default"));
+    pointer = GDK_CURSOR(gdk_cursor_new_from_name(display, "pointer"));
 
     gtk_window_set_title(GTK_WINDOW(window), "Waffy");
     gtk_widget_show_all(window);
