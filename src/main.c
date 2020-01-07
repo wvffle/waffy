@@ -11,6 +11,7 @@
 #define COLUMNS 4
 #define ICON_SIZE 48
 #define MAX_CHARS 16
+#define COL_PADDING 17
 
 desktop_entry_batch* all_desktop_entries = NULL;
 desktop_entry_batch* filtered = NULL;
@@ -23,11 +24,25 @@ int current_item = 0;
 int current_item_kb = 0;
 
 // HACK: Get over with the fact that after changing CSS class, button gets rehovered
-int last_current_item = 0;
+int last_current_item = -1;
 int last_current_item_kb = 0;
 
 GdkCursor* arrow;
 GdkCursor* pointer;
+
+int get_monitor_width () {
+    GdkWindow* gdk_window = gtk_widget_get_window(window);
+    GdkDisplay* display = gtk_widget_get_display(window);
+    GdkMonitor* monitor = gdk_display_get_monitor_at_window(display, gdk_window);
+    GdkRectangle rect;
+    gdk_monitor_get_geometry(monitor, &rect);
+    return rect.width;
+}
+
+void add_class (GtkWidget* widget, const char* class_name) {
+    GtkStyleContext* context = gtk_widget_get_style_context(widget);
+    gtk_style_context_add_class(context, class_name);
+}
 
 void window_destroy (GtkWidget* widget, gpointer *data) {
     deb_destructor(all_desktop_entries);
@@ -86,24 +101,32 @@ void app_leave (GtkWidget* widget, GdkEvent* event, int* data) {
 }
 
 void app_clicked (GtkButton* button, desktop_entry* entry) {
+    printf("run: %s\n", entry->name);
     GDesktopAppInfo* info = g_desktop_app_info_new(entry->gtk_launch_name);
 
     if (info != NULL) {
         g_autoptr(GError) error = NULL;
         g_app_info_launch(G_APP_INFO(info), NULL, NULL, &error);
 
+        if (filtered != all_desktop_entries && filtered != NULL) {
+            deb_destructor_no_entry(filtered);
+        }
+
         if (error != NULL) {
-            g_error("Could not run program '%s': %s", entry->name, error->message);
             window_destroy(NULL, NULL);
-            exit(EXIT_FAILURE);
+            g_error("Could not run program '%s': %s", entry->name, error->message);
         }
 
         window_destroy(NULL, NULL);
         exit(EXIT_SUCCESS);
     }
 
+    if (filtered != all_desktop_entries && filtered != NULL) {
+        deb_destructor_no_entry(filtered);
+    }
+
     window_destroy(NULL, NULL);
-    exit(EXIT_FAILURE);
+    g_error("Could not run program '%s': Cannot fetch AppInfo", entry->name);
 }
 
 void update_apps (desktop_entry_batch* apps) {
@@ -167,7 +190,7 @@ void update_apps (desktop_entry_batch* apps) {
         gtk_grid_insert_column(GTK_GRID(app_content), 0);
         gtk_grid_insert_column(GTK_GRID(app_content), 1);
 
-        gtk_grid_set_column_spacing(GTK_GRID(app_content), 17);
+        gtk_grid_set_column_spacing(GTK_GRID(app_content), COL_PADDING);
 
         gtk_grid_attach(GTK_GRID(app_content), icon, 0, 0, 1, 1);
         gtk_grid_attach(GTK_GRID(app_content), label, 1, 0, 1, 1);
@@ -207,17 +230,17 @@ gboolean key_pressed (GtkWidget* window, GdkEventKey* event, gpointer data) {
         if (apps == NULL) apps = all_desktop_entries;
 
         desktop_entry_batch_node* curr = apps->first;
-        int n = 0;
-        while (curr != NULL) {
-            if (n == current_item) {
-                app_clicked(NULL, curr->entry);
-                return TRUE;
-            }
 
+        int idx = (current_item != last_current_item)
+                ? current_item
+                : current_item_kb;
+
+        while (curr != NULL) {
+            if (idx-- == 0) break;
             curr = curr->next;
-            n += 1;
         }
 
+        app_clicked(NULL, curr->entry);
         return TRUE;
     }
 
@@ -263,10 +286,6 @@ gboolean key_released (GtkWidget* window, GdkEventKey* event, gpointer data) {
     char* needle = gtk_text_buffer_get_text(buf, &start, &end, FALSE);
     filtered = filter_apps(all_desktop_entries, needle, FUZZY);
     update_apps(filtered);
-
-    if (filtered != all_desktop_entries && filtered != NULL) {
-        deb_destructor_no_entry(filtered);
-    }
 }
 
 int main (int argc, char* argv[]) {
@@ -276,7 +295,7 @@ int main (int argc, char* argv[]) {
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_layer_init_for_window(GTK_WINDOW(window));
-    gtk_layer_set_layer (GTK_WINDOW(window), GTK_LAYER_SHELL_LAYER_OVERLAY);
+    gtk_layer_set_layer (GTK_WINDOW(window), GTK_LAYER_SHELL_LAYER_TOP);
 //    gtk_layer_set_keyboard_interactivity(GTK_WINDOW(window), TRUE);
 
     // HACK: Set window fullscreen
@@ -306,10 +325,20 @@ int main (int argc, char* argv[]) {
     GtkBox* search_box = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
     gtk_box_pack_start(layout, GTK_WIDGET(search_box), FALSE, FALSE, 0);
 
+    // -- Add spacing
+    int grid_width = 270 * COLUMNS + (COLUMNS + 2) * COL_PADDING;
+    GtkWidget* spacer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_set_size_request(spacer, (get_monitor_width() - grid_width) / 2, 1);
+    gtk_box_pack_start(search_box, spacer, FALSE, FALSE, 0);
+
+    // -- Add label
     GtkWidget* search_label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(search_label), "<span>Search:    </span>");
+    gtk_label_set_markup(GTK_LABEL(search_label), "<span>search:</span>");
     gtk_box_pack_start(search_box, search_label, FALSE, FALSE, 0);
 
+    add_class(search_label, "textview-label");
+
+    // -- Add input
     search_input = gtk_text_view_new();
     gtk_widget_set_name(search_input, "search");
     gtk_box_pack_start(search_box, search_input, TRUE, TRUE, 0);
@@ -320,8 +349,8 @@ int main (int argc, char* argv[]) {
     for (size_t i = 0; i < COLUMNS; ++i) {
         gtk_grid_insert_column(app_grid, i);
     }
-    gtk_grid_set_column_spacing(app_grid, 17);
-    gtk_grid_set_row_spacing(app_grid, 17);
+    gtk_grid_set_column_spacing(app_grid, COL_PADDING);
+    gtk_grid_set_row_spacing(app_grid, COL_PADDING);
     gtk_widget_set_name(GTK_WIDGET(app_grid), "apps");
 
     gtk_widget_set_halign(app_grid, GTK_ALIGN_CENTER);

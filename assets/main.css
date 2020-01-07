@@ -6,6 +6,18 @@ label {
     color: #fff;
 }
 
+.textview-label {
+    padding-right: 0.5em;
+}
+
+.textview-label,
+textview {
+    font-size: 2em;
+    padding-top: 47px;
+    padding-bottom: 47px;
+}
+
+.textview-label,
 textview text {
     color: #fff;
 }
