@@ -14,8 +14,13 @@ enum filter_mode {
     FUZZY
 };
 
+// Filter apps by needle using provided mode
 desktop_entry_batch* filter_apps (desktop_entry_batch* hay, const char* needle, enum filter_mode mode);
+
+// Fuzzy filter apps by needle
 desktop_entry_batch* filter_fuzzy (desktop_entry_batch* hay, const char* needle);
+
+// Case insensitive filter apps by needle
 desktop_entry_batch* filter_case_insensitive (desktop_entry_batch* hay, const char* needle);
 
 #endif //WAFFY_FILTER_H
