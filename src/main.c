@@ -10,11 +10,13 @@
 
 #define COLUMNS 4
 #define ICON_SIZE 48
+#define MAX_CHARS 16
 
 desktop_entry_batch* all_desktop_entries = NULL;
 desktop_entry_batch* filtered = NULL;
 GtkGrid* app_grid = NULL;
 GtkGrid* fav_grid = NULL;
+GtkWidget* window;
 GtkWidget *search_input;
 uint current_items = 0;
 int current_item = 0;
@@ -59,6 +61,16 @@ void update_current () {
             gtk_style_context_add_class(ctx, "active");
         }
     }
+}
+
+void window_enter (GtkWidget* widget, GdkEvent* event, int* data) {
+    gtk_layer_set_keyboard_interactivity(GTK_WINDOW(window), TRUE);
+}
+
+void window_leave (GtkWidget* widget, GdkEventCrossing* event, int* data) {
+    // Check if we leave the window itself
+    if (event->detail != GDK_NOTIFY_NONLINEAR) return;
+    gtk_layer_set_keyboard_interactivity(GTK_WINDOW(window), FALSE);
 }
 
 void app_enter (GtkWidget* widget, GdkEvent* event, int* data) {
@@ -140,14 +152,31 @@ void update_apps (desktop_entry_batch* apps) {
             icon = gtk_image_new_from_pixbuf(pixbuf);
         }
 
-        GtkWidget* app = gtk_button_new_with_label(curr->entry->name);
-
-        if (icon != NULL) {
-            gtk_button_set_image(GTK_BUTTON(app), icon);
-            gtk_widget_set_halign(icon, GTK_ALIGN_START);
+        if (icon == NULL) {
+            icon = gtk_image_new_from_icon_name("application-x-executable", GTK_ICON_SIZE_DIALOG);
+//            pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
+//            pixbuf = gdk_pixbuf_scale_simple(pixbuf, ICON_SIZE, ICON_SIZE, GDK_INTERP_TILES);
+//            icon = gtk_image_new_from_pixbuf(pixbuf);
         }
 
-        gtk_widget_set_hexpand(app, FALSE);
+        GtkWidget* app = gtk_button_new();
+        GtkWidget* app_content = gtk_grid_new();
+        GtkWidget* label = gtk_label_new(curr->entry->name);
+
+
+        gtk_grid_insert_column(GTK_GRID(app_content), 0);
+        gtk_grid_insert_column(GTK_GRID(app_content), 1);
+
+        gtk_grid_set_column_spacing(GTK_GRID(app_content), 17);
+
+        gtk_grid_attach(GTK_GRID(app_content), icon, 0, 0, 1, 1);
+        gtk_grid_attach(GTK_GRID(app_content), label, 1, 0, 1, 1);
+
+
+        gtk_label_set_max_width_chars(GTK_LABEL(label), MAX_CHARS);
+        gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+
+        gtk_container_add(GTK_CONTAINER(app), app_content);
 
         uint col = n % COLUMNS;
         uint row = n / COLUMNS;
@@ -245,10 +274,10 @@ int main (int argc, char* argv[]) {
 
     gtk_init(&argc, &argv);
 
-    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_layer_init_for_window(GTK_WINDOW(window));
     gtk_layer_set_layer (GTK_WINDOW(window), GTK_LAYER_SHELL_LAYER_OVERLAY);
-    gtk_layer_set_keyboard_interactivity (GTK_WINDOW(window), TRUE);
+//    gtk_layer_set_keyboard_interactivity(GTK_WINDOW(window), TRUE);
 
     // HACK: Set window fullscreen
     gtk_layer_set_anchor (GTK_WINDOW(window), 0, TRUE);
@@ -266,6 +295,8 @@ int main (int argc, char* argv[]) {
     g_signal_connect(window, "destroy", G_CALLBACK(window_destroy), NULL);
     g_signal_connect(window, "key_press_event", G_CALLBACK(key_pressed), NULL);
     g_signal_connect(window, "key_release_event", G_CALLBACK(key_released), NULL);
+    g_signal_connect(window, "enter-notify-event", G_CALLBACK(window_enter), NULL);
+    g_signal_connect(window, "leave-notify-event", G_CALLBACK(window_leave), NULL);
 
     // Main layout
     GtkBox* layout = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));

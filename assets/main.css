@@ -1,5 +1,5 @@
 window {
-    background: rgba(0, 0, 0, .4);
+    background: rgba(0, 0, 0, .7);
 }
 
 label {
@@ -16,9 +16,11 @@ textview text {
 }
 
 #apps > button {
-    background: rgba(255, 255, 255, .4);
+    background: rgba(255, 255, 255, .1);
+    min-width: 270px;
+    transition: none;
 }
 
 #apps > button.active {
-    background: rgba(255, 255, 255, .6);
+    background: rgba(255, 255, 255, .3);
 }
