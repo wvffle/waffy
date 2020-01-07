@@ -14,3 +14,7 @@ Everything is inside the `*.h` files
 - [File operation example](/main.c) // TODO (#12)
 - [List example](/src/desktop_entry.h#L28)
 - [Functions example](/src/utils.c#L32)
+
+### Open source
+Well it turned out that I've found a bug in sway which is my main wayland client
+- https://github.com/swaywm/sway/issues/4840
