@@ -12,6 +12,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+// Removes whitespaces from start and end of string
+char* str_trim (const char* str);
+
+// Checks if hay starts with needle
+int str_starts_with (const char* hay, const char* needle);
+
 // Checks if hay ends with needle
 int str_ends_with (const char* hay, const char* needle);
 

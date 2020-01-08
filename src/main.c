@@ -7,8 +7,8 @@
 
 #include "find_desktop.h"
 #include "filter.h"
+#include "config.h"
 
-#define COLUMNS 4
 #define ICON_SIZE 48
 #define MAX_CHARS 16
 #define COL_PADDING 17
@@ -64,7 +64,7 @@ void update_current () {
 
     if (idx == -1) return;
     for (size_t i = 0; i < current_items; ++i) {
-        GtkWidget* app = gtk_grid_get_child_at(app_grid, i % COLUMNS, i / COLUMNS);
+        GtkWidget* app = gtk_grid_get_child_at(app_grid, i % config_columns, i / config_columns);
         if (app == NULL) continue;
         GtkStyleContext* ctx = gtk_widget_get_style_context(app);
 
@@ -132,7 +132,7 @@ void app_clicked (GtkButton* button, desktop_entry* entry) {
 void update_apps (desktop_entry_batch* apps) {
     // Reset grid
     for (size_t i = 0; i < current_items; ++i) {
-        GtkWidget* app = gtk_grid_get_child_at(app_grid, i % COLUMNS, i / COLUMNS);
+        GtkWidget* app = gtk_grid_get_child_at(app_grid, i % config_columns, i / config_columns);
         gtk_container_remove(GTK_CONTAINER(app_grid), app);
     }
 
@@ -201,8 +201,8 @@ void update_apps (desktop_entry_batch* apps) {
 
         gtk_container_add(GTK_CONTAINER(app), app_content);
 
-        uint col = n % COLUMNS;
-        uint row = n / COLUMNS;
+        uint col = n % config_columns;
+        uint row = n / config_columns;
         gtk_grid_attach(app_grid, app, col, row, 1, 1);
         gtk_widget_show_all(app);
 
@@ -259,16 +259,16 @@ gboolean key_pressed (GtkWidget* window, GdkEventKey* event, gpointer data) {
     }
 
     if (event->keyval == GDK_KEY_Up) {
-        current_item_kb -= COLUMNS;
-        if (current_item_kb < 0) current_item_kb += COLUMNS;
+        current_item_kb -= config_columns;
+        if (current_item_kb < 0) current_item_kb += config_columns;
 
 //        update_current();
         return TRUE;
     }
 
     if (event->keyval == GDK_KEY_Down) {
-        current_item_kb += COLUMNS;
-        if (current_item_kb > current_items - 1) current_item_kb -= COLUMNS;
+        current_item_kb += config_columns;
+        if (current_item_kb > current_items - 1) current_item_kb -= config_columns;
 
 //        update_current();
         return TRUE;
@@ -289,6 +289,7 @@ gboolean key_released (GtkWidget* window, GdkEventKey* event, gpointer data) {
 }
 
 int main (int argc, char* argv[]) {
+    open_config();
     all_desktop_entries = find_all_desktop_files();
 
     gtk_init(&argc, &argv);
@@ -326,7 +327,7 @@ int main (int argc, char* argv[]) {
     gtk_box_pack_start(layout, GTK_WIDGET(search_box), FALSE, FALSE, 0);
 
     // -- Add spacing
-    int grid_width = 270 * COLUMNS + (COLUMNS + 2) * COL_PADDING;
+    int grid_width = 270 * config_columns + (config_columns + 2) * COL_PADDING;
     GtkWidget* spacer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_set_size_request(spacer, (get_monitor_width() - grid_width) / 2, 1);
     gtk_box_pack_start(search_box, spacer, FALSE, FALSE, 0);
@@ -346,7 +347,7 @@ int main (int argc, char* argv[]) {
     // Apps grid layout
     app_grid = (GtkGrid *) gtk_grid_new();
     gtk_box_pack_start(layout, GTK_WIDGET(app_grid), TRUE, TRUE, 0);
-    for (size_t i = 0; i < COLUMNS; ++i) {
+    for (size_t i = 0; i < config_columns; ++i) {
         gtk_grid_insert_column(app_grid, i);
     }
     gtk_grid_set_column_spacing(app_grid, COL_PADDING);

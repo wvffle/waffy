@@ -11,7 +11,7 @@ Year | 2019 / 2020
 Everything is inside the `*.h` files
 
 - [Structures example](/src/desktop_entry.h#L14)
-- [File operation example](/main.c) // TODO (#12)
+- [File operation example](/src/config.c#L10)
 - [List example](/src/desktop_entry.h#L28)
 - [Functions example](/src/utils.c#L32)
 
