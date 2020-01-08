@@ -2,11 +2,12 @@ cmake_minimum_required(VERSION 3.16)
 project(waffy C)
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$ENV{HOME}/.local/share/${PROJECT_NAME}")
 
-file(COPY assets DESTINATION "${CMAKE_BINARY_DIR}")
+file(COPY assets DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK3_WAYLAND REQUIRED gtk+-wayland-3.0)
+pkg_check_modules(GTK3 REQUIRED gtk+-wayland-3.0)
 pkg_check_modules(GTK3_LAYER_SHELL REQUIRED gtk-layer-shell-0)
 
 pkg_search_module(WAYLAND wayland-client)
