@@ -4,6 +4,19 @@
 
 #include "utils.h"
 
+char *read_file(const char *path) {
+    FILE* fp = fopen(path, "r");
+    if (fp == NULL) return "";
+
+    size_t len;
+    char* res = NULL;
+    ssize_t bytes_read = getdelim(&res, &len, '\0', fp);
+    fclose(fp);
+
+    if (bytes_read == -1) return "";
+    return res;
+}
+
 int str_starts_with (const char *hay, const char *needle) {
     return strncmp(needle, hay, strlen(needle)) == 0;
 }

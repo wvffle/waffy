@@ -8,7 +8,6 @@
 #define MAX_CONFIG_LINE_LENGTH 256
 
 #include <stdio.h>
-#include <sys/stat.h>
 #include "utils.h"
 
 long config_columns;

@@ -23,5 +23,5 @@ link_directories(${GTK3_LIBRARY_DIRS})
 add_definitions(${GTK3_CFLAGS_OTHER})
 #add_definitions(${WAYLAND_DEFINITIONS})
 
-add_executable(waffy src/main.c src/utils.h src/utils.c src/find_desktop.c src/find_desktop.h src/desktop_entry.c src/desktop_entry.h src/filter.c src/filter.h src/config.c src/config.h)
+add_executable(waffy src/main.c src/utils.h src/utils.c src/find_desktop.c src/find_desktop.h src/desktop_entry.c src/desktop_entry.h src/filter.c src/filter.h src/config.c src/config.h src/colors.c src/colors.h)
 target_link_libraries(waffy ${GTK3_LAYER_SHELL_LIBRARIES} ${WAYLAND_LIBRARIES} ${GTK3_LIBRARIES})

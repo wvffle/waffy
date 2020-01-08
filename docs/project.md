@@ -11,9 +11,10 @@ Year | 2019 / 2020
 Everything is inside the `*.h` files
 
 - [Structures example](/src/desktop_entry.h#L14)
-- [File operation example](/src/config.c#L10)
+- [File operation example](/src/config.c#L18)
 - [List example](/src/desktop_entry.h#L28)
-- [Functions example](/src/utils.c#L32)
+- [Function example](/src/utils.c#L36)
+- [Recursive function example](/src/config.c#L59)
 
 ### Open source
 Well it turned out that I've found a bug in sway which is my main wayland client

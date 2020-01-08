@@ -8,6 +8,7 @@
 #include "find_desktop.h"
 #include "filter.h"
 #include "config.h"
+#include "colors.h"
 
 #define ICON_SIZE 48
 #define MAX_CHARS 16
@@ -358,11 +359,14 @@ int main (int argc, char* argv[]) {
 
     update_apps(all_desktop_entries);
 
-    // Set window style
-    // TODO: Respect pywal
     GtkCssProvider* css_provider = gtk_css_provider_new();
 
-    if (gtk_css_provider_load_from_path(css_provider, "../assets/main.css", NULL)) {
+    if (config_wal == 1) {
+        add_class(window, "pywal");
+    }
+
+    char* css = get_css();
+    if (gtk_css_provider_load_from_data(css_provider, css, strlen(css), NULL)) {
         gtk_style_context_add_provider_for_screen(gtk_widget_get_screen(window),
                                                   GTK_STYLE_PROVIDER(css_provider),
                                                   GTK_STYLE_PROVIDER_PRIORITY_USER);

@@ -11,6 +11,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
+#include <sys/stat.h>
+
+// Read whole file into a string
+char* read_file (const char* path);
 
 // Removes whitespaces from start and end of string
 char* str_trim (const char* str);

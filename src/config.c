@@ -4,6 +4,8 @@
 
 #include "config.h"
 
+char* config_dir = NULL;
+
 // Default config
 long config_columns = 4;
 long config_wal = 0;
@@ -14,6 +16,10 @@ void get_str(char *value, char** res);
 void get_bool(char* value, long* res);
 
 void open_config() {
+    if (config_dir != NULL) return;
+    config_dir = str_concat(get_user_home(), "/.config/waffy");
+    mkdir(config_dir, 0755);
+
     char* file = str_concat(get_user_home(), "/.config/waffy/config");
     FILE* fp = fopen(file, "r");
 
@@ -84,11 +90,7 @@ void get_long(char *value, long *res) {
 }
 
 void write_config() {
-    char* dir = str_concat(get_user_home(), "/.config/waffy");
-    char* file = str_concat(dir, "/config");
-
-    mkdir(dir, 0755);
-
+    char* file = str_concat(config_dir, "/config");
     FILE* fp = fopen(file, "w");
 
     fprintf(fp, "columns %ld\n", config_columns);

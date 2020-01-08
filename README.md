@@ -11,7 +11,7 @@ Wayland compatible, touch friendly application launcher
 - Fuzzy find apps
 
 ## Requirements
-- [gtk-layer-shell](https://github.com/wmww/gtk-layer-shell/) - A library to write GTK applications that use Layer Shell
+- [gtk-layer-shell](https://github.com/wmww/gtk-layer-shell) - A library to write GTK applications that use Layer Shell
 
 ## Other information
 - [Studies project info](/docs/project.md)
