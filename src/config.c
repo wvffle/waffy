@@ -93,8 +93,20 @@ void write_config() {
     char* file = str_concat(config_dir, "/config");
     FILE* fp = fopen(file, "w");
 
-    fprintf(fp, "columns %ld\n", config_columns);
-    fprintf(fp, "columns true\n");
+    fprintf(fp, "#                         ___    ___              #\n");
+    fprintf(fp, "#                       /'___\\ /'___\\             #\n");
+    fprintf(fp, "#  __  __  __     __   /\\ \\__//\\ \\__/  __  __     #\n");
+    fprintf(fp, "# /\\ \\/\\ \\/\\ \\  /'__`\\ \\ \\ ,__\\ \\ ,__\\/\\ \\/\\ \\    #\n");
+    fprintf(fp, "# \\ \\ \\_/ \\_/ \\/\\ \\L\\.\\_\\ \\ \\_/\\ \\ \\_/\\ \\ \\_\\ \\   #\n");
+    fprintf(fp, "#  \\ \\___x___/'\\ \\__/.\\_\\\\ \\_\\  \\ \\_\\  \\/`____ \\  #\n");
+    fprintf(fp, "#   \\/__//__/   \\/__/\\/_/ \\/_/   \\/_/   `/___/> \\ #\n");
+    fprintf(fp, "#                                          /\\___/ #\n");
+    fprintf(fp, "#                     config               \\/__/  #\n\n");
+    fprintf(fp, "# Number of columns in launcher\n");
+    fprintf(fp, "columns %ld\n\n", config_columns);
+    fprintf(fp, "# Enable pywal colors\n");
+    fprintf(fp, "wal_enable false\n\n");
+    fprintf(fp, "# Run prompt text\n");
     fprintf(fp, "prompt \"%s\"\n", config_prompt);
 
     fclose(fp);
