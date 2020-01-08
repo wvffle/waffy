@@ -12,6 +12,7 @@
 #include "utils.h"
 
 long config_columns;
+char* config_prompt;
 
 // Write current config to the file
 void write_config();

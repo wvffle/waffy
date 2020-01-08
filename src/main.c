@@ -334,7 +334,7 @@ int main (int argc, char* argv[]) {
 
     // -- Add label
     GtkWidget* search_label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(search_label), "<span>search:</span>");
+    gtk_label_set_markup(GTK_LABEL(search_label), config_prompt);
     gtk_box_pack_start(search_box, search_label, FALSE, FALSE, 0);
 
     add_class(search_label, "textview-label");
