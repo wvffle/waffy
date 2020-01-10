@@ -7,3 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+gtk-layer-shell-rs = { git = "https://github.com/subgraph/gtk-layer-shell-rs" }
+gtk = { git = "https://github.com/gtk-rs/gtk.git" }
+gdk = { git = "https://github.com/gtk-rs/gdk.git" }
