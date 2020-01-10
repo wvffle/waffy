@@ -19,7 +19,7 @@ desktop_entry_batch* filtered = NULL;
 GtkGrid* app_grid = NULL;
 GtkGrid* fav_grid = NULL;
 GtkWidget* window;
-GtkWidget *search_input;
+GtkWidget* search_input;
 uint current_items = 0;
 int current_item = 0;
 int current_item_kb = 0;
@@ -45,7 +45,7 @@ void add_class (GtkWidget* widget, const char* class_name) {
     gtk_style_context_add_class(context, class_name);
 }
 
-void window_destroy (GtkWidget* widget, gpointer *data) {
+void window_destroy (GtkWidget* widget, gpointer* data) {
     deb_destructor(all_desktop_entries);
     gtk_main_quit();
 }
@@ -91,13 +91,13 @@ void window_leave (GtkWidget* widget, GdkEventCrossing* event, int* data) {
 
 void app_enter (GtkWidget* widget, GdkEvent* event, int* data) {
     gdk_window_set_cursor(gtk_widget_get_window(widget), pointer);
-    current_item = *data;
+    current_item =* data;
     update_current();
 }
 
 void app_leave (GtkWidget* widget, GdkEvent* event, int* data) {
     gdk_window_set_cursor(gtk_widget_get_window(widget), arrow);
-    current_item = *data;
+    current_item =* data;
     update_current();
 }
 
@@ -161,7 +161,7 @@ void update_apps (desktop_entry_batch* apps) {
             pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
 //            gtk_widget_destroy(image);
         } else {
-            const gchar** icons = g_themed_icon_get_names((GThemedIcon *) g_themed_icon_new(curr->entry->icon));
+            const gchar** icons = g_themed_icon_get_names((GThemedIcon* ) g_themed_icon_new(curr->entry->icon));
             GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, icons, ICON_SIZE, GTK_ICON_LOOKUP_FORCE_SIZE);
 
             if (info != NULL) {
@@ -328,7 +328,7 @@ int main (int argc, char* argv[]) {
     gtk_box_pack_start(layout, GTK_WIDGET(search_box), FALSE, FALSE, 0);
 
     // -- Add spacing
-    int grid_width = 270 * config_columns + (config_columns + 2) * COL_PADDING;
+    int grid_width = 270*  config_columns + (config_columns + 2)*  COL_PADDING;
     GtkWidget* spacer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_set_size_request(spacer, (get_monitor_width() - grid_width) / 2, 1);
     gtk_box_pack_start(search_box, spacer, FALSE, FALSE, 0);
@@ -346,7 +346,7 @@ int main (int argc, char* argv[]) {
     gtk_box_pack_start(search_box, search_input, TRUE, TRUE, 0);
 
     // Apps grid layout
-    app_grid = (GtkGrid *) gtk_grid_new();
+    app_grid = (GtkGrid* ) gtk_grid_new();
     gtk_box_pack_start(layout, GTK_WIDGET(app_grid), TRUE, TRUE, 0);
     for (size_t i = 0; i < config_columns; ++i) {
         gtk_grid_insert_column(app_grid, i);

@@ -4,13 +4,13 @@
 
 #include "find_desktop.h"
 
-char *get_user_desktop_files_directory() {
+char* get_user_desktop_files_directory() {
     char* homedir = get_user_home();
     char* local_desktop_directory = "/.local/share/applications/";
     return str_concat(homedir, local_desktop_directory);
 }
 
-desktop_entry *read_desktop_file(const char *file_path, const char *gtk_launch_name) {
+desktop_entry* read_desktop_file(const char* file_path, const char* gtk_launch_name) {
     FILE* fp = fopen(file_path, "r");
     if (!fp) return NULL;
 
@@ -58,7 +58,7 @@ desktop_entry *read_desktop_file(const char *file_path, const char *gtk_launch_n
     return entry;
 }
 
-desktop_entry_batch *find_desktop_files(const char *directory) {
+desktop_entry_batch* find_desktop_files(const char* directory) {
     DIR* dir_handle = opendir(directory);
 
     // Skip non-existant directory
@@ -91,7 +91,7 @@ desktop_entry_batch *find_desktop_files(const char *directory) {
     return batch;
 }
 
-desktop_entry_batch *find_all_desktop_files() {
+desktop_entry_batch* find_all_desktop_files() {
     char* user_dir = get_user_desktop_files_directory();
     char* desktop_entry_dirs[DESKTOP_ENTRY_DIRS_NUM] = {
             "/usr/share/applications/",

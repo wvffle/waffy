@@ -4,7 +4,7 @@
 
 #include "desktop_entry.h"
 
-size_t deb_push(desktop_entry_batch *batch, desktop_entry *entry) {
+size_t deb_push(desktop_entry_batch* batch, desktop_entry* entry) {
     desktop_entry_batch_node* node = malloc(sizeof(desktop_entry_batch_node));
     node->entry = entry;
     node->next = NULL;
@@ -23,7 +23,7 @@ size_t deb_push(desktop_entry_batch *batch, desktop_entry *entry) {
     return ++batch->length;
 }
 
-size_t deb_unshift(desktop_entry_batch *batch, desktop_entry *entry) {
+size_t deb_unshift(desktop_entry_batch* batch, desktop_entry* entry) {
     desktop_entry_batch_node* node = malloc(sizeof(desktop_entry_batch_node));
     node->entry = entry;
     node->next = NULL;
@@ -42,7 +42,7 @@ size_t deb_unshift(desktop_entry_batch *batch, desktop_entry *entry) {
     return ++batch->length;
 }
 
-desktop_entry *deb_pop(desktop_entry_batch *batch) {
+desktop_entry* deb_pop(desktop_entry_batch* batch) {
     if (batch->length == 0) return NULL;
 
     desktop_entry_batch_node* node = batch->last;
@@ -60,7 +60,7 @@ desktop_entry *deb_pop(desktop_entry_batch *batch) {
     return entry;
 }
 
-desktop_entry *deb_shift(desktop_entry_batch *batch) {
+desktop_entry* deb_shift(desktop_entry_batch* batch) {
     if (batch->length == 0) return NULL;
 
     desktop_entry_batch_node* node = batch->first;
@@ -78,7 +78,7 @@ desktop_entry *deb_shift(desktop_entry_batch *batch) {
     return entry;
 }
 
-void deb_concat(desktop_entry_batch *target, desktop_entry_batch *source) {
+void deb_concat(desktop_entry_batch* target, desktop_entry_batch* source) {
     if (target == NULL) {
         fprintf(stderr, "[ERROR] target is NULL");
         return;
@@ -115,7 +115,7 @@ void deb_concat(desktop_entry_batch *target, desktop_entry_batch *source) {
     deb_destructor(source);
 }
 
-desktop_entry_batch *deb_constructor() {
+desktop_entry_batch* deb_constructor() {
     desktop_entry_batch* batch = malloc(sizeof(desktop_entry_batch));
 
     batch->first = NULL;
@@ -125,7 +125,7 @@ desktop_entry_batch *deb_constructor() {
     return batch;
 }
 
-void deb_destructor(desktop_entry_batch *batch) {
+void deb_destructor(desktop_entry_batch* batch) {
     if (batch->length) {
         desktop_entry_batch_node* curr = batch->first;
 
@@ -143,7 +143,7 @@ void deb_destructor(desktop_entry_batch *batch) {
     free(batch);
 }
 
-void deb_destructor_no_entry(desktop_entry_batch *batch) {
+void deb_destructor_no_entry(desktop_entry_batch* batch) {
     if (batch->length) {
         desktop_entry_batch_node* curr = batch->first;
 
@@ -159,7 +159,7 @@ void deb_destructor_no_entry(desktop_entry_batch *batch) {
     free(batch);
 }
 
-desktop_entry *de_constructor(const char* gtk_launch_name) {
+desktop_entry* de_constructor(const char* gtk_launch_name) {
     desktop_entry* entry = malloc(sizeof(desktop_entry));
     strcpy(entry->gtk_launch_name, gtk_launch_name);
 

@@ -12,7 +12,7 @@ long config_wal = 0;
 char* config_prompt = "search:";
 
 void get_long (char* value, long* res);
-void get_str(char *value, char** res);
+void get_str(char* value, char** res);
 void get_bool(char* value, long* res);
 
 void open_config() {
@@ -56,19 +56,19 @@ void open_config() {
     fclose(fp);
 }
 
-void get_str(char *value, char** res) {
+void get_str(char* value, char** res) {
     if (value[0] != '"') {
-        char* buf = malloc(sizeof(char) * strlen(value));
+        char* buf = malloc(sizeof(char)*  strlen(value));
         strcpy(buf, value);
-        *res = buf;
+       *res = buf;
         return;
     }
 
     if (str_ends_with(value, "\"")) {
-        char* buf = malloc(sizeof(char) * (strlen(value) - 2));
+        char* buf = malloc(sizeof(char)*  (strlen(value) - 2));
         value[strlen(value) - 1] = '\0';
         strcpy(buf, value + 1);
-        *res = buf;
+       *res = buf;
         return;
     }
 
@@ -76,17 +76,17 @@ void get_str(char *value, char** res) {
     get_str(str_concat(value, str_concat(" ", buf)), res);
 }
 
-void get_bool(char *value, long *res) {
+void get_bool(char* value, long* res) {
     if (strcmp(value, "1") == 0 || strcmp(value, "yes") == 0 || strcmp(value, "on") == 0 || strcmp(value, "true") == 0) {
-        *res = 1;
+       *res = 1;
         return;
     }
 
-    *res = 0;
+   *res = 0;
 }
 
-void get_long(char *value, long *res) {
-    *res = strtol(value, NULL, 10);
+void get_long(char* value, long* res) {
+   *res = strtol(value, NULL, 10);
 }
 
 void write_config() {

@@ -4,7 +4,7 @@
 
 #include "filter.h"
 
-desktop_entry_batch *filter_apps(desktop_entry_batch *hay, const char *needle, enum filter_mode mode) {
+desktop_entry_batch* filter_apps(desktop_entry_batch* hay, const char* needle, enum filter_mode mode) {
     switch (mode) {
         case CASE_INSENSITIVE: return filter_case_insensitive(hay, needle);
         case FUZZY: return filter_fuzzy(hay, needle);
@@ -12,7 +12,7 @@ desktop_entry_batch *filter_apps(desktop_entry_batch *hay, const char *needle, e
     }
 }
 
-desktop_entry_batch *filter_fuzzy(desktop_entry_batch *hay, const char *needle) {
+desktop_entry_batch* filter_fuzzy(desktop_entry_batch* hay, const char* needle) {
     if (hay == NULL) return NULL;
     if (needle == NULL || !strlen(needle)) return hay;
 
@@ -32,7 +32,7 @@ desktop_entry_batch *filter_fuzzy(desktop_entry_batch *hay, const char *needle) 
     return res;
 }
 
-desktop_entry_batch *filter_case_insensitive(desktop_entry_batch *hay, const char *needle) {
+desktop_entry_batch* filter_case_insensitive(desktop_entry_batch* hay, const char* needle) {
     if (hay == NULL) return NULL;
     if (needle == NULL || !strlen(needle)) return hay;
 

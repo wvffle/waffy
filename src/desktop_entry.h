@@ -41,7 +41,7 @@ desktop_entry_batch* deb_constructor ();
 void deb_destructor (desktop_entry_batch* batch);
 
 // Helper function to clean the list without cleaning entries
-void deb_destructor_no_entry(desktop_entry_batch *batch);
+void deb_destructor_no_entry(desktop_entry_batch* batch);
 
 
 // Helper function to add entry to the end of a list
