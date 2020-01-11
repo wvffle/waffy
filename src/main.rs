@@ -1,9 +1,10 @@
+use std::fs;
 use gtk::*;
 use gtk_layer_shell_rs::*;
 use gdk::*;
 
-const GTK_STYLE_PROVIDER_PRIORITY_USER: i32 = 800;
-
+use serde::{Deserialize};
+use rust_embed::RustEmbed;
 
 fn main() {
     const COL_PADDING: u32 = 17;
@@ -100,6 +101,17 @@ struct DesktopEntry {
 
 }
 
+#[derive(RustEmbed)]
+#[folder = "res/"]
+struct Resource;
+
+#[derive(Deserialize)]
+struct Config {
+    columns: u8,
+    search_prompt: String,
+    enable_pywal: bool,
+}
+
 fn get_css() -> String {
     return String::from("window { background: alpha(#000, .7) }");
 }
@@ -117,7 +129,23 @@ fn find_desktop_entries() -> Vec<DesktopEntry> {
 }
 
 fn open_config() {
+    if let Some(mut config_path) = dirs::config_dir() {
+        config_path.push("waffy");
+        config_path.push("config");
 
+        if !config_path.exists() {
+            let file = Resource::get("default_config.hjson").unwrap();
+            let content = std::str::from_utf8(file.as_ref()).expect("Cannot read default config");
+            let config = serde_hjson::from_str::<Config>(&content).expect("Cannot parse default config");
+
+            fs::write(config_path, content);
+            Some(config)
+        }
+
+        let content = fs::read_to_string(config_path).expect("Could not read config");
+        let config = serde_hjson::from_str::<Config>(&content).expect("Could not parse config");
+        Some(config)
+    }
 }
 
 fn add_class<W: gtk::prelude::WidgetExt>(widget: &W, class_name: &str) {
