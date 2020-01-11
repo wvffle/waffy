@@ -12,13 +12,21 @@ use serde::{Deserialize};
 use rust_embed::RustEmbed;
 
 fn main() {
+    // Create config dir
+    if let Some(mut config_dir) = dirs::config_dir() {
+        config_dir.push("waffy");
+        if !config_dir.exists() {
+            fs::create_dir_all(config_dir);
+        }
+    }
+
     const COL_PADDING: u32 = 17;
 
     let config_wal = 0;
     let config_columns = 4;
     let config_prompt = "run:";
 
-    open_config();
+    get_config();
     let desktop_entries = find_desktop_entries();
 
     gtk::init().expect("Could not init GTK!");
@@ -129,27 +137,33 @@ fn find_desktop_entries() -> Vec<DesktopEntry> {
     return Vec::<DesktopEntry>::new();
 }
 
-fn open_config() -> Option<Config> {
+fn get_default_config (path_to_save: Option<PathBuf>) -> Config {
+    let file = Resource::get("default_config.json5").unwrap();
+    let content = String::from_utf8(file.as_ref().to_vec()).expect("Cannot read default config");
+    let config = json5::from_str::<Config>(&content).expect("Cannot parse default config");
+
+    if let Some(path) = path_to_save {
+        fs::write(path, content);
+    }
+
+    return config;
+}
+
+fn get_config() -> Config {
     if let Some(mut config_path) = dirs::config_dir() {
         config_path.push("waffy");
         config_path.push("config");
 
         if !config_path.exists() {
-            let file = Resource::get("default_config.json5").unwrap();
-            let content = std::str::from_utf8(file.as_ref()).expect("Cannot read default config");
-            let config =
-                json5::from_str::<Config>(&content).expect("Cannot parse default config");
-
-            fs::write(config_path, content);
-            return Some(config);
+            return get_default_config(Some(config_path));
         }
 
         let content = fs::read_to_string(config_path).expect("Could not read config");
         let config = json5::from_str::<Config>(&content).expect("Could not parse config");
-        return Some(config);
+        return config;
     }
 
-    None
+    get_default_config(None)
 }
 
 fn add_class<W: gtk::prelude::WidgetExt>(widget: &W, class_name: &str) {
