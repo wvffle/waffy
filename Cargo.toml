@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 dirs = "2.0.2"
-serde-hjson = "0.9.1"
+json5 = "0.2.5"
 rust-embed = "5.2.0"
 serde = { version = "1.0.104", features = ["derive"] }
 

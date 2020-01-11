@@ -135,17 +135,17 @@ fn open_config() -> Option<Config> {
         config_path.push("config");
 
         if !config_path.exists() {
-            let file = Resource::get("default_config.hjson").unwrap();
+            let file = Resource::get("default_config.json5").unwrap();
             let content = std::str::from_utf8(file.as_ref()).expect("Cannot read default config");
             let config =
-                serde_hjson::from_str::<Config>(&content).expect("Cannot parse default config");
+                json5::from_str::<Config>(&content).expect("Cannot parse default config");
 
             fs::write(config_path, content);
             return Some(config);
         }
 
         let content = fs::read_to_string(config_path).expect("Could not read config");
-        let config = serde_hjson::from_str::<Config>(&content).expect("Could not parse config");
+        let config = json5::from_str::<Config>(&content).expect("Could not parse config");
         return Some(config);
     }
 
