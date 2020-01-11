@@ -1,7 +1,12 @@
 use std::fs;
-use gtk::*;
-use gtk_layer_shell_rs::*;
+
 use gdk::*;
+use gtk::{
+    Align, BoxExt, ContainerExt, CssProvider,
+    CssProviderExt, Grid, GridExt, GtkWindowExt, Label, LabelExt, Orientation, StyleContext,
+    StyleContextExt, TextView, WidgetExt,
+};
+use gtk_layer_shell_rs::*;
 
 use serde::{Deserialize};
 use rust_embed::RustEmbed;
@@ -29,14 +34,14 @@ fn main() {
     window.set_resizable(false);
     window.set_decorated(false);
 
-    let layout = Box::new(Orientation::Vertical, 0);
+    let layout = gtk::Box::new(Orientation::Vertical, 0);
     window.add(&layout);
 
-    let search_box = Box::new(Orientation::Horizontal, 0);
+    let search_box = gtk::Box::new(Orientation::Horizontal, 0);
     layout.pack_start(&search_box, false, false, 0);
 
     let grid_width = 270 * config_columns + (config_columns + 2) * COL_PADDING;
-    let spacer = Box::new(Orientation::Horizontal, 0);
+    let spacer = gtk::Box::new(Orientation::Horizontal, 0);
     let width = get_monitor_width() - (grid_width as i32) / 2;
     spacer.set_size_request(width, 1);
 
@@ -49,7 +54,7 @@ fn main() {
     add_class(&search_label, "textview-label");
 
     let search_input = TextView::new();
-//    search_input.set_name("search");
+    //    search_input.set_name("search");
     search_box.pack_start(&search_input, true, true, 0);
 
     let app_grid = Grid::new();
@@ -61,7 +66,7 @@ fn main() {
 
     app_grid.set_column_spacing(COL_PADDING);
     app_grid.set_row_spacing(COL_PADDING);
-//    app_grid.set_name("apps");
+    //    app_grid.set_name("apps");
 
     app_grid.set_halign(Align::Center);
 
@@ -79,16 +84,16 @@ fn main() {
         StyleContext::add_provider_for_screen(
             &gdk::Screen::get_default().expect("Error initializing css provider"),
             &css_provider,
-            STYLE_PROVIDER_PRIORITY_USER,
+            gtk::STYLE_PROVIDER_PRIORITY_USER,
         );
     }
 
     if let Some(display) = window.get_display() {
-        let arrow = Cursor::new_from_name(&display, "default")
-            .expect("Could not create 'default' cursor!");
+        let arrow =
+            Cursor::new_from_name(&display, "default").expect("Could not create 'default' cursor!");
 
-        let pointer = Cursor::new_from_name(&display, "pointer")
-            .expect("Could not create 'pointer' cursor!");
+        let pointer =
+            Cursor::new_from_name(&display, "pointer").expect("Could not create 'pointer' cursor!");
     }
 
     window.set_title("Waffy");
@@ -97,9 +102,7 @@ fn main() {
     gtk::main();
 }
 
-struct DesktopEntry {
-
-}
+struct DesktopEntry {}
 
 #[derive(RustEmbed)]
 #[folder = "res/"]
@@ -116,9 +119,7 @@ fn get_css() -> String {
     return String::from("window { background: alpha(#000, .7) }");
 }
 
-fn update_apps(apps: &Vec<DesktopEntry>) {
-
-}
+fn update_apps(apps: &Vec<DesktopEntry>) {}
 
 fn get_monitor_width() -> i32 {
     return 1920;
@@ -128,7 +129,7 @@ fn find_desktop_entries() -> Vec<DesktopEntry> {
     return Vec::<DesktopEntry>::new();
 }
 
-fn open_config() {
+fn open_config() -> Option<Config> {
     if let Some(mut config_path) = dirs::config_dir() {
         config_path.push("waffy");
         config_path.push("config");
@@ -136,16 +137,19 @@ fn open_config() {
         if !config_path.exists() {
             let file = Resource::get("default_config.hjson").unwrap();
             let content = std::str::from_utf8(file.as_ref()).expect("Cannot read default config");
-            let config = serde_hjson::from_str::<Config>(&content).expect("Cannot parse default config");
+            let config =
+                serde_hjson::from_str::<Config>(&content).expect("Cannot parse default config");
 
             fs::write(config_path, content);
-            Some(config)
+            return Some(config);
         }
 
         let content = fs::read_to_string(config_path).expect("Could not read config");
         let config = serde_hjson::from_str::<Config>(&content).expect("Could not parse config");
-        Some(config)
+        return Some(config);
     }
+
+    None
 }
 
 fn add_class<W: gtk::prelude::WidgetExt>(widget: &W, class_name: &str) {
