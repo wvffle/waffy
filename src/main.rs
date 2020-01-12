@@ -294,9 +294,8 @@ fn parse_desktop_file(path: PathBuf) -> io::Result<Option<DesktopEntry>> {
                 continue;
             }
 
-            if value == "Icon" {
+            if key == "Icon" {
                 entry.set_icon(value);
-                println!("{}", value);
                 continue;
             }
         } else if line == "[Desktop Entry]" {
