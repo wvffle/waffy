@@ -1,13 +1,13 @@
 use std::fs;
-use std::fs::File;
 use std::io;
 use std::path::PathBuf;
 use once_cell::sync::OnceCell;
 
 use gdk::*;
 use gtk::{
-    Align, BoxExt, ContainerExt, CssProvider, CssProviderExt, Grid, GridExt, GtkWindowExt, Label,
-    LabelExt, Orientation, StyleContext, StyleContextExt, TextView, WidgetExt,
+    Align, BoxExt, ContainerExt, CssProvider, CssProviderExt, GridExt, GtkWindowExt, Label,
+    LabelExt, Orientation, StyleContext, StyleContextExt, TextView, WidgetExt, Widget,
+    IconTheme, Image, ImageExt, IconThemeExt
 };
 use gtk_layer_shell_rs::*;
 
@@ -15,6 +15,7 @@ use rust_embed::RustEmbed;
 use serde::Deserialize;
 
 mod grid;
+use grid::GridButton;
 
 fn main() {
     // Create config dir
@@ -70,20 +71,23 @@ fn main() {
     //    search_input.set_name("search");
     search_box.pack_start(&search_input, true, true, 0);
 
-    let app_grid = Grid::new();
-    layout.pack_start(&app_grid, true, true, 0);
+    let mut app_grid = grid::Grid::<DesktopEntry>::new(desktop_entries, grid::SHOW_ICON | grid::SHOW_LABEL, Box::new(|entry| {
+        println!("{:?}", entry.display_name);
+    }));
+
+    layout.pack_start(&app_grid.window, true, true, 0);
 
     for i in 0..config_columns {
-        app_grid.insert_column(i as i32);
+//        app_grid.insert_column(i as i32);
     }
 
-    app_grid.set_column_spacing(COL_PADDING);
-    app_grid.set_row_spacing(COL_PADDING);
+//    app_grid.set_column_spacing(COL_PADDING);
+//    app_grid.set_row_spacing(COL_PADDING);
     //    app_grid.set_name("apps");
 
-    app_grid.set_halign(Align::Center);
+//    app_grid.set_halign(Align::Center);
 
-    update_apps(&desktop_entries);
+//    update_apps(&desktop_entries);
 
     let css_provider = CssProvider::new();
 
@@ -109,8 +113,9 @@ fn main() {
             Cursor::new_from_name(&display, "pointer").expect("Could not create 'pointer' cursor!");
     }
 
-    window.set_title("Waffy");
+    window.set_title("waffy");
     window.show_all();
+    app_grid.update();
 
     gtk::main();
 }
@@ -139,24 +144,73 @@ fn get_default_css(path_to_save: Option<PathBuf>) -> String {
 
 #[derive(Debug)]
 struct DesktopEntry {
-    name: Option<String>,
-    icon: Option<String>,
+    name: String,
+    display_name: String,
+    icon_path: Option<String>,
 }
 
 impl DesktopEntry {
     pub fn empty() -> Self {
         Self {
-            name: None,
-            icon: None,
+            name: String::from(""),
+            display_name: String::from(""),
+            icon_path: None,
         }
     }
 
     pub fn set_name<S: Into<String>>(&mut self, name: S) {
-        self.name = Some(name.into());
+        self.name = name.into();
+        self.display_name = self.name.clone();
     }
 
     pub fn set_icon<S: Into<String>>(&mut self, icon: S) {
-        self.icon = Some(icon.into());
+        self.icon_path = Some(icon.into());
+    }
+}
+
+impl GridButton for DesktopEntry {
+    fn label(&self) -> &String {
+        &self.name
+    }
+
+    fn display_label(&self) -> Label {
+        Label::new(Some(&self.display_name))
+    }
+
+    fn icon(&self) -> Image {
+        if self.icon_path == None {
+            // gtk::IconSize::Dialog is 48x48
+            return Image::new_from_icon_name(Some("application-x-executable"), gtk::IconSize::Dialog);
+        }
+
+        let icon = self.icon_path.as_ref().unwrap();
+        if PathBuf::from(&icon).exists() {
+            let image = Image::new_from_file(&icon);
+
+            // Scale down to 48x48
+            if let Some(pixbuf) = image.get_pixbuf() {
+                if let Some(pixbuf) = pixbuf.scale_simple(48, 48, gdk_pixbuf::InterpType::Tiles) {
+                    return Image::new_from_pixbuf(Some(&pixbuf));
+                }
+            }
+        }
+
+        if let Some(theme) = IconTheme::get_default() {
+            let info = theme.load_icon(&icon, 48, gtk::IconLookupFlags::FORCE_SIZE);
+
+            if let Ok(info) = info {
+                if  let Some(pixbuf) = info {
+                    return Image::new_from_pixbuf(Some(&pixbuf));
+                }
+            }
+        }
+
+        // gtk::IconSize::Dialog is 48x48
+        Image::new_from_icon_name(Some("application-x-executable"), gtk::IconSize::Dialog)
+    }
+
+    fn set_display_label(&mut self, label: String) {
+        self.display_name = label;
     }
 }
 
@@ -242,6 +296,7 @@ fn parse_desktop_file(path: PathBuf) -> io::Result<Option<DesktopEntry>> {
 
             if value == "Icon" {
                 entry.set_icon(value);
+                println!("{}", value);
                 continue;
             }
         } else if line == "[Desktop Entry]" {

@@ -976,10 +976,13 @@ version = "0.1.0"
 dependencies = [
  "dirs",
  "gdk",
+ "gdk-pixbuf",
+ "gio",
  "gtk",
  "gtk-layer-shell-rs",
  "json5",
  "once_cell",
+ "pango",
  "rust-embed",
  "serde",
  "sublime_fuzzy",

@@ -16,3 +16,6 @@ sublime_fuzzy = "0.6.0"
 gtk-layer-shell-rs = { git = "https://github.com/subgraph/gtk-layer-shell-rs" }
 gtk = { git = "https://github.com/gtk-rs/gtk.git" }
 gdk = { git = "https://github.com/gtk-rs/gdk.git" }
+gdk-pixbuf = { git = "https://github.com/gtk-rs/gdk-pixbuf.git" }
+gio = { git = "https://github.com/gtk-rs/gio.git" }
+pango = { git = "https://github.com/gtk-rs/pango.git" }

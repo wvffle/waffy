@@ -1,28 +1,32 @@
-use gtk::{Grid as GtkGrid, ScrolledWindow as GtkWindow, Viewport as GtkViewport, Widget as GtkWidget, GridExt, ViewportExt, ScrolledWindowExt, ContainerExt, WidgetExt, Adjustment};
+use gtk::{
+    Grid as GtkGrid, ScrolledWindow as GtkWindow, Viewport as GtkViewport, Widget as GtkWidget,
+    GridExt, ViewportExt, ScrolledWindowExt, ContainerExt, WidgetExt, LabelExt,
+};
 use sublime_fuzzy::{best_match as fuzzy_match, format_simple as fuzzy_format};
 
 use super::Config;
 
+pub const SHOW_ICON: u32  = 0b01;
+pub const SHOW_LABEL: u32 = 0b10;
+
 pub trait GridButton {
-    fn default_icon(&self) -> String;
-    fn label(&self) -> String;
-    fn display_label(&self) -> String;
-    fn icon(&self) -> Option<String>;
-    fn set_display_label(&self, label: String) -> ();
-    fn gtk_widget(&self) -> &GtkWidget;
+    fn label(&self) -> &String;
+    fn display_label(&self) -> gtk::Label;
+    fn icon(&self) -> gtk::Image;
+    fn set_display_label(&mut self, label: String);
 }
 
 pub struct Grid<T> {
     items: Vec<T>,
     filter_string: String,
-    flags: u8,
+    flags: u32,
     click_callback: Box<Fn(&T)>,
-    window: GtkWindow,
+    pub window: GtkWindow,
     grid: GtkGrid,
 }
 
 impl<T: GridButton> Grid<T> {
-    pub fn new (items: Vec<T>, flags: u8, click_callback: Box<Fn(&T)>) -> Self {
+    pub fn new (items: Vec<T>, flags: u32, click_callback: Box<Fn(&T)>) -> Self {
         let adjustment = None::<&gtk::Adjustment>;
         let window = GtkWindow::new(adjustment, adjustment);
         let viewport = GtkViewport::new(adjustment, adjustment);
@@ -35,6 +39,10 @@ impl<T: GridButton> Grid<T> {
             grid.insert_column(i as i32);
         }
 
+        grid.set_column_spacing(17);
+        grid.set_row_spacing(17);
+        grid.set_halign(gtk::Align::Center);
+
         window.add(&viewport);
         viewport.add(&grid);
 
@@ -46,7 +54,7 @@ impl<T: GridButton> Grid<T> {
         self.update();
     }
 
-    pub fn update (&self) {
+    pub fn update (&mut self) {
         self.grid.foreach(|child| self.grid.remove(child));
 
         let config = Config::get();
@@ -54,9 +62,14 @@ impl<T: GridButton> Grid<T> {
 
         let mut filtered: Vec<&T> = Vec::new();
         for item in self.items.iter() {
+            if self.filter_string == "" {
+                filtered.push(item);
+                continue;
+            }
+
             let label = item.label();
             if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
-                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
+//                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
                 filtered.push(item);
             }
         }
@@ -64,7 +77,28 @@ impl<T: GridButton> Grid<T> {
         for (i, item) in filtered.into_iter().enumerate() {
             let col = i as i32 % columns;
             let row = i as i32 / columns;
-            self.grid.attach(item.gtk_widget(), col, row, 1, 1);
+
+            let widget = gtk::Button::new();
+            let content = gtk::Grid::new();
+
+            content.set_column_spacing(17);
+
+            if self.flags & SHOW_ICON > 0 {
+                content.insert_column(0);
+                content.attach(&item.icon(), 0, 0, 1, 1);
+            }
+
+            if self.flags & SHOW_LABEL > 0 {
+                let label = item.display_label();
+                content.insert_column(1);
+                content.attach(&label, 1, 0, 1, 1);
+
+                label.set_max_width_chars(16);
+                label.set_ellipsize(pango::EllipsizeMode::End);
+            }
+
+            widget.add(&content);
+            self.grid.attach(&widget, col, row, 1, 1);
         }
 
         self.grid.show_all();
