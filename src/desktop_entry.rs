@@ -19,7 +19,7 @@ impl DesktopEntry {
         }
     }
 
-    pub fn from_path (path: PathBuf) -> io::Result<Option<Self>> {
+    pub fn from_file(path: PathBuf) -> io::Result<Option<Self>> {
         let content = fs::read_to_string(path)?;
 
         let mut entry = Self::empty();
@@ -27,16 +27,17 @@ impl DesktopEntry {
 
         for line in content.lines() {
             let mut chars = line.chars();
+            let first_char = chars.nth(0);
 
-            if let Some(first_char) = chars.nth(0) {
-                if first_char == '\0' || first_char == '#' {
+            if let Some(chr) = first_char {
+                if chr == '\0' || chr == '#' {
                     continue;
                 }
             }
 
             if entry_section {
-                if let Some(first_char) = chars.nth(0) {
-                    if first_char == '[' {
+                if let Some(chr) = first_char {
+                    if chr == '[' {
                         break;
                     }
                 }
@@ -103,7 +104,7 @@ impl DesktopEntry {
                             None => continue,
                         }
 
-                        if let Ok(desktop_entry) = Self::from_path(path) {
+                        if let Ok(desktop_entry) = Self::from_file(path) {
                             if let Some(desktop_entry) = desktop_entry {
                                 desktop_entries.push(desktop_entry);
                             }
