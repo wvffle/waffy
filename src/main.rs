@@ -14,7 +14,8 @@ use gtk_layer_shell_rs::*;
 use rust_embed::RustEmbed;
 use serde::Deserialize;
 
-//mod app;
+mod app;
+
 fn main() {
     // Create config dir
     if let Some(mut config_dir) = dirs::config_dir() {
