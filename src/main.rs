@@ -14,7 +14,7 @@ use gtk_layer_shell_rs::*;
 use rust_embed::RustEmbed;
 use serde::Deserialize;
 
-mod app;
+mod grid;
 
 fn main() {
     // Create config dir

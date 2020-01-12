@@ -10,6 +10,7 @@ json5 = "0.2.5"
 rust-embed = "5.2.0"
 serde = { version = "1.0.104", features = ["derive"] }
 once_cell = "1.2.0"
+sublime_fuzzy = "0.6.0"
 
 # Github deps
 gtk-layer-shell-rs = { git = "https://github.com/subgraph/gtk-layer-shell-rs" }
