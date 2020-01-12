@@ -1,6 +1,6 @@
 use gtk::{
     Grid as GtkGrid, ScrolledWindow as GtkWindow, Viewport as GtkViewport, Widget as GtkWidget,
-    GridExt, ViewportExt, ScrolledWindowExt, ContainerExt, WidgetExt, LabelExt,
+    GridExt, ViewportExt, ScrolledWindowExt, ContainerExt, WidgetExt, LabelExt, ButtonExt,
 };
 use sublime_fuzzy::{best_match as fuzzy_match, format_simple as fuzzy_format};
 
@@ -96,6 +96,10 @@ impl<T: GridButton> Grid<T> {
                 label.set_max_width_chars(16);
                 label.set_ellipsize(pango::EllipsizeMode::End);
             }
+
+            widget.connect_clicked(|_| {
+                (self.click_callback)(&item);
+            });
 
             widget.add(&content);
             self.grid.attach(&widget, col, row, 1, 1);
