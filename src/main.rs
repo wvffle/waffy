@@ -289,6 +289,44 @@ impl Config {
     }
 }
 
+fn get_css() -> String {
+    let mut content = String::from("");
+    if let Some(mut style_path) = dirs::config_dir() {
+        style_path.push("waffy");
+        style_path.push("style.css");
+
+        if style_path.exists() {
+            content = fs::read_to_string(style_path).expect("Could not read config");
+        } else {
+            content = get_default_css(Some(style_path))
+        }
+    }
+
+    if content == "" {
+        content = get_default_css(None);
+    }
+
+    // TODO: Check config option
+    if let Some(mut pywal_path) = dirs::cache_dir() {
+        pywal_path.push("wal");
+        pywal_path.push("colors-waybar.css");
+
+        if pywal_path.exists() {
+            let mut pywal_content = fs::read_to_string(pywal_path).expect("Could not read config");
+            pywal_content.push_str(content.as_str());
+            content = pywal_content;
+        }
+    }
+
+    content
+}
+
+fn update_apps(apps: &Vec<DesktopEntry>) {}
+
+fn get_monitor_width() -> i32 {
+    return 1920;
+}
+
 fn add_class<W: gtk::prelude::WidgetExt>(widget: &W, class_name: &str) {
     let ctx = widget.get_style_context();
     ctx.add_class(class_name);
