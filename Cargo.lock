@@ -973,6 +973,7 @@ dependencies = [
  "gtk",
  "gtk-layer-shell-rs",
  "json5",
+ "once_cell",
  "rust-embed",
  "serde",
 ]

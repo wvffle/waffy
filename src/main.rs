@@ -2,6 +2,7 @@ use std::fs;
 use std::fs::File;
 use std::io;
 use std::path::PathBuf;
+use once_cell::sync::OnceCell;
 
 use gdk::*;
 use gtk::{
@@ -19,7 +20,7 @@ fn main() {
     if let Some(mut config_dir) = dirs::config_dir() {
         config_dir.push("waffy");
         if !config_dir.exists() {
-            fs::create_dir_all(config_dir);
+            let _ = fs::create_dir_all(config_dir);
         }
     }
 
@@ -29,7 +30,7 @@ fn main() {
     let config_columns = 4;
     let config_prompt = "run:";
 
-    get_config();
+    let config = Config::get();
     let desktop_entries = find_desktop_entries();
 
     gtk::init().expect("Could not init GTK!");
@@ -124,14 +125,15 @@ struct Config {
     enable_pywal: bool,
 }
 
-fn get_css() -> String {
-    return String::from("window { background: alpha(#000, .7) }");
-}
+fn get_default_css(path_to_save: Option<PathBuf>) -> String {
+    let file = Resource::get("default_style.css").unwrap();
+    let content = String::from_utf8(file.as_ref().to_vec()).expect("Cannot read default style");
 
-fn update_apps(apps: &Vec<DesktopEntry>) {}
+    if let Some(path) = path_to_save {
+        let _ = fs::write(path, &content);
+    }
 
-fn get_monitor_width() -> i32 {
-    return 1920;
+    content
 }
 
 #[derive(Debug)]
@@ -249,33 +251,42 @@ fn parse_desktop_file(path: PathBuf) -> io::Result<Option<DesktopEntry>> {
     Ok(Some(entry))
 }
 
-fn get_default_config (path_to_save: Option<PathBuf>) -> Config {
-    let file = Resource::get("default_config.json5").unwrap();
-    let content = String::from_utf8(file.as_ref().to_vec()).expect("Cannot read default config");
-    let config = json5::from_str::<Config>(&content).expect("Cannot parse default config");
+static CONFIG: OnceCell<Config> = OnceCell::new();
 
-    if let Some(path) = path_to_save {
-        fs::write(path, content);
-    }
+impl Config {
+    fn default (path_to_save: Option<PathBuf>) -> Self {
+        let file = Resource::get("default_config.json5").unwrap();
+        let content = String::from_utf8(file.as_ref().to_vec()).expect("Cannot read default config");
+        let config = json5::from_str::<Self>(&content).expect("Cannot parse default config");
 
-    return config;
-}
-
-fn get_config() -> Config {
-    if let Some(mut config_path) = dirs::config_dir() {
-        config_path.push("waffy");
-        config_path.push("config");
-
-        if !config_path.exists() {
-            return get_default_config(Some(config_path));
+        if let Some(path) = path_to_save {
+            let _ = fs::write(path, &content);
         }
 
-        let content = fs::read_to_string(config_path).expect("Could not read config");
-        let config = json5::from_str::<Config>(&content).expect("Could not parse config");
-        return config;
+        config
     }
 
-    get_default_config(None)
+    fn get_uncached () -> Self {
+        if let Some(mut config_path) = dirs::config_dir() {
+            config_path.push("waffy");
+            config_path.push("config");
+
+            if !config_path.exists() {
+                return Self::default(Some(config_path));
+            }
+
+            let content = fs::read_to_string(config_path).expect("Could not read config");
+            let config = json5::from_str::<Self>(&content).expect("Could not parse config");
+            return config;
+        }
+
+        Self::default(None)
+    }
+
+
+    fn get () -> &'static Self {
+        CONFIG.get_or_init(Self::get_uncached)
+    }
 }
 
 fn add_class<W: gtk::prelude::WidgetExt>(widget: &W, class_name: &str) {
