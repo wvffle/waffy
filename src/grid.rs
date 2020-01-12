@@ -1,8 +1,11 @@
 use gtk::{
-    Grid as GtkGrid, ScrolledWindow as GtkWindow, Viewport as GtkViewport, Widget as GtkWidget,
-    GridExt, ViewportExt, ScrolledWindowExt, ContainerExt, WidgetExt, LabelExt, ButtonExt,
+    Grid as GtkGrid, ScrolledWindow as GtkWindow, Viewport as GtkViewport,
+    GridExt, ContainerExt, WidgetExt, LabelExt, ButtonExt,
 };
-use sublime_fuzzy::{best_match as fuzzy_match, format_simple as fuzzy_format};
+use sublime_fuzzy::{
+    best_match as fuzzy_match,
+    // format_simple as fuzzy_format
+};
 
 use super::Config;
 
@@ -20,13 +23,13 @@ pub struct Grid<T> {
     items: Vec<T>,
     filter_string: String,
     flags: u32,
-    click_callback: Box<Fn(&T)>,
+    click_callback: Box<dyn Fn(&T)>,
     pub window: GtkWindow,
     grid: GtkGrid,
 }
 
 impl<T: GridButton> Grid<T> {
-    pub fn new (items: Vec<T>, flags: u32, click_callback: Box<Fn(&T)>) -> Self {
+    pub fn new (items: Vec<T>, flags: u32, click_callback: Box<dyn Fn(&T)>) -> Self {
         let adjustment = None::<&gtk::Adjustment>;
         let window = GtkWindow::new(adjustment, adjustment);
         let viewport = GtkViewport::new(adjustment, adjustment);

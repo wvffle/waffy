@@ -1,8 +1,7 @@
 use gdk::*;
 use gtk::{
-    Align, BoxExt, ContainerExt, CssProvider, CssProviderExt, GridExt, GtkWindowExt, Label,
-    LabelExt, Orientation, StyleContext, StyleContextExt, TextView, WidgetExt, Widget,
-    IconTheme, Image, ImageExt, IconThemeExt,
+    BoxExt, ContainerExt, CssProvider, CssProviderExt, GtkWindowExt, Label,
+    LabelExt, Orientation, StyleContext, StyleContextExt, TextView, WidgetExt,
 };
 use gtk_layer_shell_rs::*;
 
