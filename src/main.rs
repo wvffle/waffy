@@ -1,15 +1,17 @@
 use std::fs;
+use std::fs::File;
+use std::io;
+use std::path::PathBuf;
 
 use gdk::*;
 use gtk::{
-    Align, BoxExt, ContainerExt, CssProvider,
-    CssProviderExt, Grid, GridExt, GtkWindowExt, Label, LabelExt, Orientation, StyleContext,
-    StyleContextExt, TextView, WidgetExt,
+    Align, BoxExt, ContainerExt, CssProvider, CssProviderExt, Grid, GridExt, GtkWindowExt, Label,
+    LabelExt, Orientation, StyleContext, StyleContextExt, TextView, WidgetExt,
 };
 use gtk_layer_shell_rs::*;
 
-use serde::{Deserialize};
 use rust_embed::RustEmbed;
+use serde::Deserialize;
 
 fn main() {
     const COL_PADDING: u32 = 17;
@@ -102,8 +104,6 @@ fn main() {
     gtk::main();
 }
 
-struct DesktopEntry {}
-
 #[derive(RustEmbed)]
 #[folder = "res/"]
 struct Resource;
@@ -125,8 +125,119 @@ fn get_monitor_width() -> i32 {
     return 1920;
 }
 
+#[derive(Debug)]
+struct DesktopEntry {
+    name: Option<String>,
+    icon: Option<String>,
+}
+
+impl DesktopEntry {
+    pub fn empty() -> Self {
+        Self {
+            name: None,
+            icon: None,
+        }
+    }
+
+    pub fn set_name<S: Into<String>>(&mut self, name: S) {
+        self.name = Some(name.into());
+    }
+
+    pub fn set_icon<S: Into<String>>(&mut self, icon: S) {
+        self.icon = Some(icon.into());
+    }
+}
+
 fn find_desktop_entries() -> Vec<DesktopEntry> {
-    return Vec::<DesktopEntry>::new();
+    let mut desktop_entry_dirs: Vec<PathBuf> = vec!["/usr/share/applications".into(), "/usr/local/share/applications".into()];
+
+    if let Some(user_dir) = dirs::home_dir() {
+        desktop_entry_dirs.push(user_dir.join(".local/share/applications/"));
+    }
+
+    let mut desktop_entries: Vec<DesktopEntry> = Vec::with_capacity(10);
+
+    for dir in desktop_entry_dirs {
+        if let Ok(read_dir) = fs::read_dir(dir) {
+            for entry in read_dir {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    let extension = path.extension();
+
+                    match extension {
+                        Some(extension) => {
+                            if extension != "desktop" {
+                                continue;
+                            }
+                        }
+                        None => continue,
+                    }
+
+                    if let Ok(desktop_entry) = parse_desktop_file(path) {
+                        if let Some(desktop_entry) = desktop_entry {
+                            desktop_entries.push(desktop_entry);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    desktop_entries
+}
+
+fn parse_desktop_file(path: PathBuf) -> io::Result<Option<DesktopEntry>> {
+    let content = fs::read_to_string(path)?;
+
+    let mut entry = DesktopEntry::empty();
+    let mut entry_section = false;
+
+    for line in content.lines() {
+        let mut chars = line.chars();
+
+        if let Some(first_char) = chars.nth(0) {
+            if first_char == '\0' || first_char == '#' {
+                continue;
+            }
+        }
+
+        if entry_section {
+            if let Some(first_char) = chars.nth(0) {
+                if first_char == '[' {
+                    break;
+                }
+            }
+
+            let split = line.splitn(2, "=").map(String::from).collect::<Vec<_>>();
+
+            let key = match split.get(0) {
+                Some(key) => key,
+                None => continue,
+            };
+            let value = match split.get(1) {
+                Some(value) => value,
+                None => continue,
+            };
+
+            if key == "NoDisplay" && value == "true" {
+                return Ok(None);
+            }
+
+            if key == "Name" {
+                entry.set_name(value);
+                continue;
+            }
+
+            if value == "Icon" {
+                entry.set_icon(value);
+                continue;
+            }
+        } else if line == "[Desktop Entry]" {
+            entry_section = true;
+        }
+    }
+
+    Ok(Some(entry))
 }
 
 fn open_config() -> Option<Config> {
