@@ -62,6 +62,7 @@ fn main() {
         println!("{:?}", entry.display_name);
     }));
 
+
     layout.pack_start(&app_grid.window, true, true, 0);
 
     let css_provider = CssProvider::new();
@@ -90,7 +91,7 @@ fn main() {
 
     window.set_title("waffy");
     window.show_all();
-    app_grid.update();
+//    app_grid.update();
 
     gtk::main();
 }

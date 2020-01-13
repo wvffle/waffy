@@ -19,17 +19,15 @@ pub trait GridButton {
     fn set_display_label(&mut self, label: String);
 }
 
-pub struct Grid<T> {
-    items: Vec<T>,
+pub struct Grid {
+    items: Vec<gtk::Button>,
     filter_string: String,
-    flags: u32,
-    click_callback: Box<dyn Fn(&T)>,
     pub window: GtkWindow,
     grid: GtkGrid,
 }
 
-impl<T: GridButton> Grid<T> {
-    pub fn new (items: Vec<T>, flags: u32, click_callback: Box<dyn Fn(&T)>) -> Self {
+impl Grid {
+    pub fn new (items: Vec<dyn GridButton>, flags: u32, click_callback: Box<dyn Fn(&'static dyn GridButton)>) -> Self {
         let adjustment = None::<&gtk::Adjustment>;
         let window = GtkWindow::new(adjustment, adjustment);
         let viewport = GtkViewport::new(adjustment, adjustment);
@@ -49,7 +47,47 @@ impl<T: GridButton> Grid<T> {
         window.add(&viewport);
         viewport.add(&grid);
 
-        Self { items, filter_string: String::from(""), flags, click_callback, window, grid }
+        let mut buttons: Vec<gtk::Button> = Vec::new();
+
+        let mut i = 0;
+        for item in items {
+            let col = i as i32 % config.columns as i32;
+            let row = i as i32 / config.columns as i32;
+            i += 1;
+
+            let widget = gtk::Button::new();
+            let content = gtk::Grid::new();
+
+            content.set_column_spacing(17);
+
+            if flags & SHOW_ICON > 0 {
+                content.insert_column(0);
+                content.attach(&item.icon(), 0, 0, 1, 1);
+            }
+
+            if flags & SHOW_LABEL > 0 {
+                let label = item.display_label();
+                content.insert_column(1);
+                content.attach(&label, 1, 0, 1, 1);
+
+                label.set_max_width_chars(16);
+                label.set_ellipsize(pango::EllipsizeMode::End);
+            }
+
+            widget.connect_clicked(|widget| {
+                (click_callback)(item);
+            });
+
+            widget.add(&content);
+            grid.attach(&widget, col, row, 1, 1);
+            buttons.push(widget);
+        }
+
+        Self {
+            items: buttons,
+            filter_string: String::from(""),
+            window, grid,
+        }
     }
 
     pub fn filter (&mut self, needle: String) {
@@ -59,55 +97,20 @@ impl<T: GridButton> Grid<T> {
 
     pub fn update (&mut self) {
         self.grid.foreach(|child| self.grid.remove(child));
-
-        let config = Config::get();
-        let columns = config.columns as i32;
-
-        let mut filtered: Vec<&T> = Vec::new();
-        for item in self.items.iter() {
-            if self.filter_string == "" {
-                filtered.push(item);
-                continue;
-            }
-
-            let label = item.label();
-            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
-//                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
-                filtered.push(item);
-            }
-        }
-
-        for (i, item) in filtered.into_iter().enumerate() {
-            let col = i as i32 % columns;
-            let row = i as i32 / columns;
-
-            let widget = gtk::Button::new();
-            let content = gtk::Grid::new();
-
-            content.set_column_spacing(17);
-
-            if self.flags & SHOW_ICON > 0 {
-                content.insert_column(0);
-                content.attach(&item.icon(), 0, 0, 1, 1);
-            }
-
-            if self.flags & SHOW_LABEL > 0 {
-                let label = item.display_label();
-                content.insert_column(1);
-                content.attach(&label, 1, 0, 1, 1);
-
-                label.set_max_width_chars(16);
-                label.set_ellipsize(pango::EllipsizeMode::End);
-            }
-
-            widget.connect_clicked(|_| {
-                (self.click_callback)(&item);
-            });
-
-            widget.add(&content);
-            self.grid.attach(&widget, col, row, 1, 1);
-        }
-
+//
+//        for item in self.items.iter() {
+//            if self.filter_string == "" {
+//                filtered.push(item);
+//                continue;
+//            }
+//
+//            let label = item.label();
+//            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
+////                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
+//                filtered.push(item);
+//            }
+//        }
+//
         self.grid.show_all();
     }
 }
