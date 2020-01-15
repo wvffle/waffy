@@ -4,8 +4,8 @@ use std::rc::Rc;
 
 use gdk::*;
 use gtk::{
-    BoxExt, ContainerExt, CssProvider, CssProviderExt, GtkWindowExt, Label, LabelExt, Orientation,
-    StyleContext, StyleContextExt, TextView, WidgetExt,
+    BoxExt, ContainerExt, CssProvider, CssProviderExt, GtkWindowExt, Inhibit, Label, LabelExt,
+    Orientation, StyleContext, StyleContextExt, TextView, WidgetExt,
 };
 use gtk_layer_shell_rs::*;
 
@@ -34,6 +34,18 @@ fn main() {
     set_anchor(&window, Edge::Left, true);
     set_anchor(&window, Edge::Right, true);
     set_anchor(&window, Edge::Bottom, true);
+
+    window.connect_key_release_event(|window, key| {
+        use gdk::enums::key;
+
+        match key.get_keyval() {
+            key::Escape => {
+                window.close();
+                std::process::exit(0)
+            }
+            _ => Inhibit(true),
+        }
+    });
 
     window.set_resizable(false);
     window.set_decorated(false);
