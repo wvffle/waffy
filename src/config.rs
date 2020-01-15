@@ -1,7 +1,7 @@
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
-use std::path::PathBuf;
 use std::fs;
+use std::path::PathBuf;
 
 use super::resource::Resource;
 
@@ -15,7 +15,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn create_dir () {
+    pub fn create_dir() {
         if let Some(mut config_dir) = dirs::config_dir() {
             config_dir.push("waffy");
             if !config_dir.exists() {
@@ -24,11 +24,11 @@ impl Config {
         }
     }
 
-    pub fn default (path_to_save: Option<PathBuf>) -> Self {
-//        let file = Resource::get("default_config.json5").unwrap();
-//        let content = String::from_utf8(file.as_ref().to_vec())
-        let content = Resource::from_file("default_config.json5")
-            .expect("Cannot read default config");
+    pub fn default(path_to_save: Option<PathBuf>) -> Self {
+        //        let file = Resource::get("default_config.json5").unwrap();
+        //        let content = String::from_utf8(file.as_ref().to_vec())
+        let content =
+            Resource::from_file("default_config.json5").expect("Cannot read default config");
 
         let config = json5::from_str::<Self>(&content).expect("Cannot parse default config");
         if let Some(path) = path_to_save {
@@ -38,7 +38,7 @@ impl Config {
         config
     }
 
-    pub fn get_uncached () -> Self {
+    pub fn get_uncached() -> Self {
         if let Some(mut config_path) = dirs::config_dir() {
             config_path.push("waffy");
             config_path.push("config");
@@ -55,9 +55,7 @@ impl Config {
         Self::default(None)
     }
 
-
-    pub fn get () -> &'static Self {
+    pub fn get() -> &'static Self {
         CONFIG.get_or_init(Self::get_uncached)
     }
 }
-

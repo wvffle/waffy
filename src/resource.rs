@@ -6,7 +6,7 @@ use std::string::FromUtf8Error;
 pub struct Resource;
 
 impl Resource {
-    pub fn from_file (filename: &str) -> Result<String, FromUtf8Error> {
+    pub fn from_file(filename: &str) -> Result<String, FromUtf8Error> {
         let file = Self::get(filename).unwrap();
         String::from_utf8(file.as_ref().to_vec())
     }

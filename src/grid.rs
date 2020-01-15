@@ -1,15 +1,15 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use gtk::{
-    Grid as GtkGrid, ScrolledWindow as GtkWindow, Viewport as GtkViewport,
-    GridExt, ContainerExt, WidgetExt, LabelExt, ButtonExt,
+    ButtonExt, ContainerExt, Grid as GtkGrid, GridExt, LabelExt, ScrolledWindow as GtkWindow,
+    Viewport as GtkViewport, WidgetExt,
 };
-use sublime_fuzzy::{
-    best_match as fuzzy_match,
-    // format_simple as fuzzy_format
-};
+use sublime_fuzzy::best_match as fuzzy_match;
 
 use super::Config;
 
-pub const SHOW_ICON: u32  = 0b01;
+pub const SHOW_ICON: u32 = 0b01;
 pub const SHOW_LABEL: u32 = 0b10;
 
 pub trait GridButton {
@@ -27,7 +27,11 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn new (items: Vec<dyn GridButton>, flags: u32, click_callback: Box<dyn Fn(&'static dyn GridButton)>) -> Self {
+    pub fn new(
+        items: Vec<Rc<RefCell<dyn GridButton>>>,
+        flags: u32,
+        click_callback: Rc<dyn Fn(Rc<RefCell<dyn GridButton>>)>,
+    ) -> Self {
         let adjustment = None::<&gtk::Adjustment>;
         let window = GtkWindow::new(adjustment, adjustment);
         let viewport = GtkViewport::new(adjustment, adjustment);
@@ -62,11 +66,11 @@ impl Grid {
 
             if flags & SHOW_ICON > 0 {
                 content.insert_column(0);
-                content.attach(&item.icon(), 0, 0, 1, 1);
+                content.attach(&item.borrow().icon(), 0, 0, 1, 1);
             }
 
             if flags & SHOW_LABEL > 0 {
-                let label = item.display_label();
+                let label = item.borrow().display_label();
                 content.insert_column(1);
                 content.attach(&label, 1, 0, 1, 1);
 
@@ -74,8 +78,10 @@ impl Grid {
                 label.set_ellipsize(pango::EllipsizeMode::End);
             }
 
-            widget.connect_clicked(|widget| {
-                (click_callback)(item);
+            let callback = click_callback.clone();
+
+            widget.connect_clicked(move |_| {
+                (callback)(item.clone());
             });
 
             widget.add(&content);
@@ -86,31 +92,32 @@ impl Grid {
         Self {
             items: buttons,
             filter_string: String::from(""),
-            window, grid,
+            window,
+            grid,
         }
     }
 
-    pub fn filter (&mut self, needle: String) {
+    pub fn filter(&mut self, needle: String) {
         self.filter_string = needle;
         self.update();
     }
 
-    pub fn update (&mut self) {
+    pub fn update(&mut self) {
         self.grid.foreach(|child| self.grid.remove(child));
-//
-//        for item in self.items.iter() {
-//            if self.filter_string == "" {
-//                filtered.push(item);
-//                continue;
-//            }
-//
-//            let label = item.label();
-//            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
-////                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
-//                filtered.push(item);
-//            }
-//        }
-//
+        //
+        //        for item in self.items.iter() {
+        //            if self.filter_string == "" {
+        //                filtered.push(item);
+        //                continue;
+        //            }
+        //
+        //            let label = item.label();
+        //            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
+        ////                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
+        //                filtered.push(item);
+        //            }
+        //        }
+        //
         self.grid.show_all();
     }
 }

@@ -1,20 +1,23 @@
+use crate::grid::GridButton;
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use gdk::*;
 use gtk::{
-    BoxExt, ContainerExt, CssProvider, CssProviderExt, GtkWindowExt, Label,
-    LabelExt, Orientation, StyleContext, StyleContextExt, TextView, WidgetExt,
+    BoxExt, ContainerExt, CssProvider, CssProviderExt, GtkWindowExt, Label, LabelExt, Orientation,
+    StyleContext, StyleContextExt, TextView, WidgetExt,
 };
 use gtk_layer_shell_rs::*;
 
-mod grid;
-mod style;
 mod config;
+mod grid;
 mod resource;
+mod style;
 
 mod desktop_entry;
 use desktop_entry::DesktopEntry;
 
 use config::Config;
-
 
 fn main() {
     Config::create_dir();
@@ -41,7 +44,7 @@ fn main() {
     let search_box = gtk::Box::new(Orientation::Horizontal, 0);
     layout.pack_start(&search_box, false, false, 0);
 
-    let grid_width = 270 * 4 + (4 + - 1) * 17;
+    let grid_width = 270 * 4 + (4 + -1) * 17;
     let spacer = gtk::Box::new(Orientation::Horizontal, 0);
     let width = get_monitor_width() / 2 - (grid_width as i32) / 2;
     spacer.set_size_request(width, 1);
@@ -58,10 +61,18 @@ fn main() {
     //    search_input.set_name("search");
     search_box.pack_start(&search_input, true, true, 0);
 
-    let mut app_grid = grid::Grid::<DesktopEntry>::new(desktop_entries, grid::SHOW_ICON | grid::SHOW_LABEL, Box::new(|entry| {
-        println!("{:?}", entry.display_name);
-    }));
+    let buttons = desktop_entries
+        .into_iter()
+        .map(|entry| entry as Rc<RefCell<dyn GridButton>>)
+        .collect::<Vec<_>>();
 
+    let mut app_grid = grid::Grid::new(
+        buttons,
+        grid::SHOW_ICON | grid::SHOW_LABEL,
+        Rc::new(|entry| {
+            println!("{:?}", entry.borrow().label());
+        }),
+    );
 
     layout.pack_start(&app_grid.window, true, true, 0);
 
@@ -91,7 +102,7 @@ fn main() {
 
     window.set_title("waffy");
     window.show_all();
-//    app_grid.update();
+    //    app_grid.update();
 
     gtk::main();
 }

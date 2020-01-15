@@ -1,15 +1,13 @@
-use std::path::PathBuf;
 use std::fs;
+use std::path::PathBuf;
 
 use super::resource::Resource;
 
 pub fn get_default_css(path_to_save: Option<PathBuf>) -> String {
-//    let file = Resource::get("default_style.css").unwrap();
-//    let content = String::from_utf8(file.as_ref().to_vec())
+    //    let file = Resource::get("default_style.css").unwrap();
+    //    let content = String::from_utf8(file.as_ref().to_vec())
 
-    let content = Resource::from_file("default_style.css")
-        .expect("Cannot read default style");
-
+    let content = Resource::from_file("default_style.css").expect("Cannot read default style");
 
     if let Some(path) = path_to_save {
         let _ = fs::write(path, &content);
@@ -49,4 +47,3 @@ pub fn get_css() -> String {
 
     content
 }
-

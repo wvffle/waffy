@@ -1,6 +1,9 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use gtk::{IconTheme, IconThemeExt, Image, ImageExt, Label};
 use std::path::PathBuf;
 use std::{fs, io};
-use gtk::{Label, Image, IconTheme, ImageExt, IconThemeExt};
 
 use super::grid::GridButton;
 
@@ -11,7 +14,7 @@ pub struct DesktopEntry {
 }
 
 impl DesktopEntry {
-    pub fn empty () -> Self {
+    pub fn empty() -> Self {
         Self {
             name: String::from(""),
             display_name: String::from(""),
@@ -75,8 +78,11 @@ impl DesktopEntry {
         Ok(Some(entry))
     }
 
-    pub fn get_dirs () -> Vec<PathBuf> {
-        let mut dirs: Vec<PathBuf> = vec!["/usr/share/applications".into(), "/usr/local/share/applications".into()];
+    pub fn get_dirs() -> Vec<PathBuf> {
+        let mut dirs: Vec<PathBuf> = vec![
+            "/usr/share/applications".into(),
+            "/usr/local/share/applications".into(),
+        ];
 
         if let Some(user_dir) = dirs::home_dir() {
             dirs.push(user_dir.join(".local/share/applications/"));
@@ -85,8 +91,8 @@ impl DesktopEntry {
         dirs
     }
 
-    pub fn get_all () -> Vec<DesktopEntry> {
-        let mut desktop_entries: Vec<DesktopEntry> = Vec::with_capacity(10);
+    pub fn get_all() -> Vec<Rc<RefCell<DesktopEntry>>> {
+        let mut desktop_entries: Vec<Rc<RefCell<DesktopEntry>>> = Vec::with_capacity(10);
 
         for dir in Self::get_dirs() {
             if let Ok(read_dir) = fs::read_dir(dir) {
@@ -106,7 +112,7 @@ impl DesktopEntry {
 
                         if let Ok(desktop_entry) = Self::from_file(path) {
                             if let Some(desktop_entry) = desktop_entry {
-                                desktop_entries.push(desktop_entry);
+                                desktop_entries.push(Rc::new(RefCell::new(desktop_entry)));
                             }
                         }
                     }
@@ -117,12 +123,12 @@ impl DesktopEntry {
         desktop_entries
     }
 
-    pub fn set_name<S: Into<String>> (&mut self, name: S) {
+    pub fn set_name<S: Into<String>>(&mut self, name: S) {
         self.name = name.into();
         self.display_name = self.name.clone();
     }
 
-    pub fn set_icon<S: Into<String>> (&mut self, icon: S) {
+    pub fn set_icon<S: Into<String>>(&mut self, icon: S) {
         self.icon_path = Some(icon.into());
     }
 }
@@ -139,7 +145,10 @@ impl GridButton for DesktopEntry {
     fn icon(&self) -> Image {
         if self.icon_path == None {
             // gtk::IconSize::Dialog is 48x48
-            return Image::new_from_icon_name(Some("application-x-executable"), gtk::IconSize::Dialog);
+            return Image::new_from_icon_name(
+                Some("application-x-executable"),
+                gtk::IconSize::Dialog,
+            );
         }
 
         let icon = self.icon_path.as_ref().unwrap();
@@ -158,7 +167,7 @@ impl GridButton for DesktopEntry {
             let info = theme.load_icon(&icon, 48, gtk::IconLookupFlags::FORCE_SIZE);
 
             if let Ok(info) = info {
-                if  let Some(pixbuf) = info {
+                if let Some(pixbuf) = info {
                     return Image::new_from_pixbuf(Some(&pixbuf));
                 }
             }
@@ -172,4 +181,3 @@ impl GridButton for DesktopEntry {
         self.display_name = label;
     }
 }
-
