@@ -34,6 +34,8 @@ fn main() {
     set_anchor(&window, Edge::Left, true);
     set_anchor(&window, Edge::Right, true);
     set_anchor(&window, Edge::Bottom, true);
+    set_keyboard_interactivity(&window, true);
+
 
     window.connect_key_release_event(|window, key| {
         use gdk::enums::key;
