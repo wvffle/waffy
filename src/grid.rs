@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use gtk::{
     ButtonExt, ContainerExt, Grid as GtkGrid, GridExt, LabelExt, ScrolledWindow as GtkWindow,
-    Viewport as GtkViewport, WidgetExt,
+    Viewport as GtkViewport, WidgetExt, StyleContextExt
 };
 use sublime_fuzzy::best_match as fuzzy_match;
 
@@ -82,6 +82,18 @@ impl Grid {
 
             widget.connect_clicked(move |_| {
                 (callback)(item.clone());
+            });
+
+            widget.connect_enter_notify_event(move |widget, _| {
+                let ctx = widget.get_style_context();
+                ctx.add_class("active");
+                gtk::Inhibit(true)
+            });
+
+            widget.connect_leave_notify_event(move |widget, _| {
+                let ctx = widget.get_style_context();
+                ctx.remove_class("active");
+                gtk::Inhibit(true)
             });
 
             widget.add(&content);
