@@ -12,6 +12,8 @@ use super::Config;
 pub const SHOW_ICON: u32 = 0b01;
 pub const SHOW_LABEL: u32 = 0b10;
 
+type GridButtonCallback = dyn Fn(Rc<RefCell<dyn GridButton>>);
+
 pub trait GridButton {
     fn label(&self) -> &String;
     fn display_label(&self) -> gtk::Label;
@@ -30,7 +32,7 @@ impl Grid {
     pub fn new(
         items: Vec<Rc<RefCell<dyn GridButton>>>,
         flags: u32,
-        click_callback: Rc<dyn Fn(Rc<RefCell<dyn GridButton>>)>,
+        click_callback: Rc<GridButtonCallback>,
     ) -> Self {
         let adjustment = None::<&gtk::Adjustment>;
         let window = GtkWindow::new(adjustment, adjustment);

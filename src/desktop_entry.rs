@@ -30,7 +30,7 @@ impl DesktopEntry {
 
         for line in content.lines() {
             let mut chars = line.chars();
-            let first_char = chars.nth(0);
+            let first_char = chars.next();
 
             if let Some(chr) = first_char {
                 if chr == '\0' || chr == '#' {
@@ -45,7 +45,7 @@ impl DesktopEntry {
                     }
                 }
 
-                let split = line.splitn(2, "=").map(String::from).collect::<Vec<_>>();
+                let split = line.splitn(2, '=').map(String::from).collect::<Vec<_>>();
 
                 let key = match split.get(0) {
                     Some(key) => key,

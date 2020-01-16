@@ -92,7 +92,7 @@ fn main() {
 
     let css_provider = CssProvider::new();
 
-    if config.enable_pywal == true {
+    if config.enable_pywal {
         add_class(&window, "pywal");
     }
 
