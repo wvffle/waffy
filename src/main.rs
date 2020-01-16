@@ -34,19 +34,30 @@ fn main() {
     set_anchor(&window, Edge::Left, true);
     set_anchor(&window, Edge::Right, true);
     set_anchor(&window, Edge::Bottom, true);
-    set_keyboard_interactivity(&window, true);
-
 
     window.connect_key_release_event(|window, key| {
         use gdk::enums::key;
 
         match key.get_keyval() {
             key::Escape => {
-                window.close();
+                window.destroy();
                 std::process::exit(0)
             }
             _ => Inhibit(true),
         }
+    });
+
+    window.connect_enter_notify_event(|window, event| {
+        set_keyboard_interactivity(window, true);
+        Inhibit(false)
+    });
+
+    window.connect_leave_notify_event(|window, event| {
+        if event.get_detail() == gdk::NotifyType::NonlinearVirtual {
+            set_keyboard_interactivity(window, false);
+        }
+
+        Inhibit(false)
     });
 
     window.set_resizable(false);
