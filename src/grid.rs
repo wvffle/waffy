@@ -1,18 +1,24 @@
-use std::cell::RefCell;
+use std::cell::{RefCell, Ref};
 use std::rc::Rc;
 
 use gtk::{
     ButtonExt, ContainerExt, Grid as GtkGrid, GridExt, LabelExt, ScrolledWindow as GtkWindow,
     Viewport as GtkViewport, WidgetExt, StyleContextExt
 };
-use sublime_fuzzy::best_match as fuzzy_match;
+use sublime_fuzzy::{
+    best_match as fuzzy_match,
+    format_simple as fuzzy_format,
+};
 
 use super::Config;
+use std::collections::HashMap;
+use std::collections::vec_deque::VecDeque;
 
 pub const SHOW_ICON: u32 = 0b01;
 pub const SHOW_LABEL: u32 = 0b10;
 
-type GridButtonCallback = dyn Fn(Rc<RefCell<dyn GridButton>>);
+type GridButtonRc = Rc<RefCell<dyn GridButton>>;
+type GridButtonCallback = dyn Fn(GridButtonRc);
 
 pub trait GridButton {
     fn label(&self) -> &String;
@@ -22,7 +28,8 @@ pub trait GridButton {
 }
 
 pub struct Grid {
-    items: Vec<gtk::Button>,
+    buttons: Vec<gtk::Button>,
+    items: Vec<GridButtonRc>,
     filter_string: String,
     pub window: GtkWindow,
     grid: GtkGrid,
@@ -30,7 +37,7 @@ pub struct Grid {
 
 impl Grid {
     pub fn new(
-        items: Vec<Rc<RefCell<dyn GridButton>>>,
+        items: Vec<GridButtonRc>,
         flags: u32,
         click_callback: Rc<GridButtonCallback>,
     ) -> Self {
@@ -103,8 +110,14 @@ impl Grid {
             buttons.push(widget);
         }
 
+        let mut local_items = Vec::new();
+        for item in items {
+            local_items.push(item.clone());
+        }
+
         Self {
-            items: buttons,
+            buttons,
+            items: local_items,
             filter_string: String::from(""),
             window,
             grid,
@@ -117,21 +130,68 @@ impl Grid {
     }
 
     pub fn update(&mut self) {
-        self.grid.foreach(|child| self.grid.remove(child));
-        //
-        //        for item in self.items.iter() {
-        //            if self.filter_string == "" {
-        //                filtered.push(item);
-        //                continue;
-        //            }
-        //
-        //            let label = item.label();
-        //            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
-        ////                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
-        //                filtered.push(item);
-        //            }
-        //        }
-        //
-        self.grid.show_all();
+        let mut sorted = Vec::with_capacity(self.items.len());
+
+        for (i, mut item) in self.items.iter().enumerate() {
+            let mut item = item.borrow_mut();
+            if self.filter_string == "" {
+                sorted.push((item, true, i));
+                continue;
+            }
+
+            let label = item.label();
+            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
+                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
+                sorted.push((item, true, i));
+                continue;
+            }
+
+            sorted.push((item, false, i));
+        }
+
+        sorted.sort_by_key(|a| a.0.label());
+        sorted.sort_by_key(|a| a.1);
+
+        let mut items = HashMap::new();
+        for (i, item) in sorted.into_iter().enumerate() {
+            items.insert(item.0.label(), (item.0, item.1, i));
+        }
+
+        let columns = Config::get().columns as i32;
+
+        let mut visited = HashMap::new();
+        let mut queue = VecDeque::new();
+        for (i, (item, _, _)) in sorted.into_iter().enumerate() {
+            if *visited.get(&i).unwrap_or(&false) {
+                continue;
+            }
+
+            queue.push_back((i, None));
+            while !queue.is_empty() {
+                let (i, button) = queue.pop_front().unwrap();
+                visited.insert(i, true);
+
+                let (item, show, next_idx) = sorted.get(i).unwrap();
+
+                let col = i as i32 % columns;
+                let row = i as i32 / columns;
+                let button = button.unwrap_or(&self.grid.get_child_at(col, row).unwrap());
+
+                if !visited.get(next_idx).unwrap_or(&false) {
+                    let col = *next_idx as i32 % columns;
+                    let row = *next_idx as i32 / columns;
+                    queue.push_back((next_idx.clone(), Some(&self.grid.get_child_at(col, row).unwrap())));
+                }
+
+                let col = *next_idx as i32 % columns;
+                let row = *next_idx as i32 / columns;
+                self.grid.attach(button, col, row, 1, 1);
+
+                if *show { button.show(); }
+                else { button.hide(); }
+            }
+        }
+
+        self.grid.show();
     }
 }
