@@ -99,6 +99,9 @@ fn main() {
         }),
     );
 
+    let grid = &app_grid.grid;
+    grid.set_widget_name("apps");
+
     layout.pack_start(&app_grid.window, true, true, 0);
 
     let css_provider = CssProvider::new();

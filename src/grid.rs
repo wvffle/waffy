@@ -32,7 +32,7 @@ pub struct Grid {
     items: Vec<GridButtonRc>,
     filter_string: String,
     pub window: GtkWindow,
-    grid: GtkGrid,
+    pub(crate) grid: GtkGrid,
 }
 
 impl Grid {
@@ -63,7 +63,10 @@ impl Grid {
         let mut buttons: Vec<gtk::Button> = Vec::new();
 
         let mut i = 0;
+        let mut local_items = Vec::new();
         for item in items {
+            local_items.push(item.clone());
+
             let col = i as i32 % config.columns as i32;
             let row = i as i32 / config.columns as i32;
             i += 1;
@@ -108,11 +111,6 @@ impl Grid {
             widget.add(&content);
             grid.attach(&widget, col, row, 1, 1);
             buttons.push(widget);
-        }
-
-        let mut local_items = Vec::new();
-        for item in items {
-            local_items.push(item.clone());
         }
 
         Self {
