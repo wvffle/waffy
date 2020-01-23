@@ -32,7 +32,7 @@ pub struct Grid {
     items: Vec<GridButtonRc>,
     filter_string: String,
     pub window: GtkWindow,
-    pub(crate) grid: GtkGrid,
+    pub grid: GtkGrid,
 }
 
 impl Grid {
@@ -128,68 +128,68 @@ impl Grid {
     }
 
     pub fn update(&mut self) {
-        let mut sorted = Vec::with_capacity(self.items.len());
-
-        for (i, mut item) in self.items.iter().enumerate() {
-            let mut item = item.borrow_mut();
-            if self.filter_string == "" {
-                sorted.push((item, true, i));
-                continue;
-            }
-
-            let label = item.label();
-            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
-                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
-                sorted.push((item, true, i));
-                continue;
-            }
-
-            sorted.push((item, false, i));
-        }
-
-        sorted.sort_by_key(|a| a.0.label());
-        sorted.sort_by_key(|a| a.1);
-
-        let mut items = HashMap::new();
-        for (i, item) in sorted.into_iter().enumerate() {
-            items.insert(item.0.label(), (item.0, item.1, i));
-        }
-
-        let columns = Config::get().columns as i32;
-
-        let mut visited = HashMap::new();
-        let mut queue = VecDeque::new();
-        for (i, (item, _, _)) in sorted.into_iter().enumerate() {
-            if *visited.get(&i).unwrap_or(&false) {
-                continue;
-            }
-
-            queue.push_back((i, None));
-            while !queue.is_empty() {
-                let (i, button) = queue.pop_front().unwrap();
-                visited.insert(i, true);
-
-                let (item, show, next_idx) = sorted.get(i).unwrap();
-
-                let col = i as i32 % columns;
-                let row = i as i32 / columns;
-                let button = button.unwrap_or(&self.grid.get_child_at(col, row).unwrap());
-
-                if !visited.get(next_idx).unwrap_or(&false) {
-                    let col = *next_idx as i32 % columns;
-                    let row = *next_idx as i32 / columns;
-                    queue.push_back((next_idx.clone(), Some(&self.grid.get_child_at(col, row).unwrap())));
-                }
-
-                let col = *next_idx as i32 % columns;
-                let row = *next_idx as i32 / columns;
-                self.grid.attach(button, col, row, 1, 1);
-
-                if *show { button.show(); }
-                else { button.hide(); }
-            }
-        }
-
-        self.grid.show();
+//        let mut sorted = Vec::with_capacity(self.items.len());
+//
+//        for (i, mut item) in self.items.iter().enumerate() {
+//            let mut item = item.borrow_mut();
+//            if self.filter_string == "" {
+//                sorted.push((item, true, i));
+//                continue;
+//            }
+//
+//            let label = item.label();
+//            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
+//                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
+//                sorted.push((item, true, i));
+//                continue;
+//            }
+//
+//            sorted.push((item, false, i));
+//        }
+//
+//        sorted.sort_by_key(|a| a.0.label());
+//        sorted.sort_by_key(|a| a.1);
+//
+//        let mut items = HashMap::new();
+//        for (i, item) in sorted.into_iter().enumerate() {
+//            items.insert(item.0.label(), (item.0, item.1, i));
+//        }
+//
+//        let columns = Config::get().columns as i32;
+//
+//        let mut visited = HashMap::new();
+//        let mut queue = VecDeque::new();
+//        for (i, (item, _, _)) in sorted.into_iter().enumerate() {
+//            if *visited.get(&i).unwrap_or(&false) {
+//                continue;
+//            }
+//
+//            queue.push_back((i, None));
+//            while !queue.is_empty() {
+//                let (i, button) = queue.pop_front().unwrap();
+//                visited.insert(i, true);
+//
+//                let (item, show, next_idx) = sorted.get(i).unwrap();
+//
+//                let col = i as i32 % columns;
+//                let row = i as i32 / columns;
+//                let button = button.unwrap_or(&self.grid.get_child_at(col, row).unwrap());
+//
+//                if !visited.get(next_idx).unwrap_or(&false) {
+//                    let col = *next_idx as i32 % columns;
+//                    let row = *next_idx as i32 / columns;
+//                    queue.push_back((next_idx.clone(), Some(&self.grid.get_child_at(col, row).unwrap())));
+//                }
+//
+//                let col = *next_idx as i32 % columns;
+//                let row = *next_idx as i32 / columns;
+//                self.grid.attach(button, col, row, 1, 1);
+//
+//                if *show { button.show(); }
+//                else { button.hide(); }
+//            }
+//        }
+//
+//        self.grid.show();
     }
 }
