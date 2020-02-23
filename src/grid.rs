@@ -1,9 +1,11 @@
-use std::cell::{RefCell, Ref};
+use std::cell::{Ref, RefCell};
+use std::collections::HashMap;
+use std::collections::vec_deque::VecDeque;
 use std::rc::Rc;
 
 use gtk::{
     ButtonExt, ContainerExt, Grid as GtkGrid, GridExt, LabelExt, ScrolledWindow as GtkWindow,
-    Viewport as GtkViewport, WidgetExt, StyleContextExt
+    StyleContextExt, Viewport as GtkViewport, WidgetExt,
 };
 use sublime_fuzzy::{
     best_match as fuzzy_match,
@@ -11,8 +13,6 @@ use sublime_fuzzy::{
 };
 
 use super::Config;
-use std::collections::HashMap;
-use std::collections::vec_deque::VecDeque;
 
 pub const SHOW_ICON: u32 = 0b01;
 pub const SHOW_LABEL: u32 = 0b10;
@@ -127,69 +127,70 @@ impl Grid {
         self.update();
     }
 
-    pub fn update(&mut self) {
-//        let mut sorted = Vec::with_capacity(self.items.len());
-//
-//        for (i, mut item) in self.items.iter().enumerate() {
-//            let mut item = item.borrow_mut();
-//            if self.filter_string == "" {
-//                sorted.push((item, true, i));
-//                continue;
-//            }
-//
-//            let label = item.label();
-//            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
-//                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
-//                sorted.push((item, true, i));
-//                continue;
-//            }
-//
-//            sorted.push((item, false, i));
-//        }
-//
-//        sorted.sort_by_key(|a| a.0.label());
-//        sorted.sort_by_key(|a| a.1);
-//
-//        let mut items = HashMap::new();
-//        for (i, item) in sorted.into_iter().enumerate() {
-//            items.insert(item.0.label(), (item.0, item.1, i));
-//        }
-//
-//        let columns = Config::get().columns as i32;
-//
-//        let mut visited = HashMap::new();
-//        let mut queue = VecDeque::new();
-//        for (i, (item, _, _)) in sorted.into_iter().enumerate() {
-//            if *visited.get(&i).unwrap_or(&false) {
-//                continue;
-//            }
-//
-//            queue.push_back((i, None));
-//            while !queue.is_empty() {
-//                let (i, button) = queue.pop_front().unwrap();
-//                visited.insert(i, true);
-//
-//                let (item, show, next_idx) = sorted.get(i).unwrap();
-//
-//                let col = i as i32 % columns;
-//                let row = i as i32 / columns;
-//                let button = button.unwrap_or(&self.grid.get_child_at(col, row).unwrap());
-//
-//                if !visited.get(next_idx).unwrap_or(&false) {
-//                    let col = *next_idx as i32 % columns;
-//                    let row = *next_idx as i32 / columns;
-//                    queue.push_back((next_idx.clone(), Some(&self.grid.get_child_at(col, row).unwrap())));
-//                }
-//
-//                let col = *next_idx as i32 % columns;
-//                let row = *next_idx as i32 / columns;
-//                self.grid.attach(button, col, row, 1, 1);
-//
-//                if *show { button.show(); }
-//                else { button.hide(); }
-//            }
-//        }
-//
-//        self.grid.show();
+    pub fn update(&self) {
+        let mut sorted_entries = HashMap::with_capacity(self.items.len());
+
+        for (i, mut item) in self.items.iter().enumerate() {
+            let mut item = item.borrow_mut();
+            let label = item.label().clone();
+
+            if self.filter_string == "" {
+                sorted_entries.insert(label, (item, true, i));
+                continue;
+            }
+
+            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
+                item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
+                sorted_entries.insert(label, (item, true, i));
+                continue;
+            }
+
+            sorted_entries.insert(label, (item, false, i));
+        }
+
+        // sorted.sort_by_key(|a| a.0.label().clone());
+        // sorted.sort_by_key(|a| a.1);
+        //
+        // let mut items = HashMap::new();
+        // for (i, item) in sorted.into_iter().enumerate() {
+        //     items.insert(item.0.label().clone(), (item.0, item.1, i));
+        // }
+
+        let columns = Config::get().columns as i32;
+
+        let mut visited = HashMap::new();
+        let mut queue = VecDeque::new();
+
+        for (i, (key, value)) in sorted_entries.into_iter().enumerate() {
+            if visited.get(&i).copied().unwrap_or(false) {
+                continue;
+            }
+
+            queue.push_back((i, None));
+            while !queue.is_empty() {
+                let (i, button) = queue.pop_front().unwrap();
+                visited.insert(i, true);
+
+                let (_, show, next_idx) = value;
+
+                let col = i as i32 % columns;
+                let row = i as i32 / columns;
+                let button = &button.unwrap_or(self.grid.get_child_at(col, row).unwrap());
+
+                if !visited.get(&next_idx).unwrap_or(&false) {
+                    let col = next_idx as i32 % columns;
+                    let row = next_idx as i32 / columns;
+                    queue.push_back((next_idx.clone(), Some(self.grid.get_child_at(col, row).unwrap())));
+                }
+
+                let col = next_idx as i32 % columns;
+                let row = next_idx as i32 / columns;
+                self.grid.attach(button, col, row, 1, 1);
+
+                if show { button.show(); } else { button.hide(); }
+            }
+        }
+
+        self.grid.show();
     }
 }

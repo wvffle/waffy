@@ -1,13 +1,14 @@
-use crate::grid::GridButton;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use gdk::*;
-use gtk::{
-    BoxExt, ContainerExt, CssProvider, CssProviderExt, GtkWindowExt, Inhibit, Label, LabelExt,
-    Orientation, StyleContext, StyleContextExt, TextView, WidgetExt,
-};
+use gtk::{BoxExt, ContainerExt, CssProvider, CssProviderExt, GtkWindowExt, Inhibit, Label, LabelExt, Orientation, StyleContext, StyleContextExt, TextBuffer, TextBufferExt, TextTagTable, TextView, WidgetExt};
 use gtk_layer_shell_rs::*;
+
+use config::Config;
+use desktop_entry::DesktopEntry;
+
+use crate::grid::GridButton;
 
 mod config;
 mod grid;
@@ -15,9 +16,6 @@ mod resource;
 mod style;
 
 mod desktop_entry;
-use desktop_entry::DesktopEntry;
-
-use config::Config;
 
 fn main() {
     Config::create_dir();
@@ -82,27 +80,41 @@ fn main() {
 
     add_class(&search_label, "textview-label");
 
-    let search_input = TextView::new();
-    //    search_input.set_name("search");
-    search_box.pack_start(&search_input, true, true, 0);
-
     let buttons = desktop_entries
         .into_iter()
         .map(|entry| entry as Rc<RefCell<dyn GridButton>>)
         .collect::<Vec<_>>();
 
-    let mut app_grid = grid::Grid::new(
+    let mut app_grid = Rc::new(RefCell::new(grid::Grid::new(
         buttons,
         grid::SHOW_ICON | grid::SHOW_LABEL,
         Rc::new(|entry| {
             println!("{:?}", entry.borrow().label());
         }),
-    );
+    )));
 
-    let grid = &app_grid.grid;
+    let buffer = TextBuffer::new(None::<&TextTagTable>);
+    let cloned_app_grid = app_grid.clone();
+
+    buffer.connect_changed(move |buf| {
+        let search_text = buf.get_text(&buf.get_start_iter(), &buf.get_end_iter(), false)
+            .unwrap_or("".into());
+
+        if let Ok(mut grid) = cloned_app_grid.try_borrow_mut() {
+            println!("search text: {}", search_text);
+
+            grid.filter(search_text.to_string());
+        }
+    });
+
+    let search_input = TextView::new_with_buffer(&buffer);
+    search_box.pack_start(&search_input, true, true, 0);
+
+    let grid = &app_grid.borrow().grid;
     grid.set_widget_name("apps");
 
-    layout.pack_start(&app_grid.window, true, true, 0);
+    let gtk_window = &app_grid.borrow().window;
+    layout.pack_start(gtk_window, true, true, 0);
 
     let css_provider = CssProvider::new();
 
@@ -130,7 +142,6 @@ fn main() {
 
     window.set_title("waffy");
     window.show_all();
-    //    app_grid.update();
 
     gtk::main();
 }
