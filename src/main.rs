@@ -41,11 +41,13 @@ fn main() {
                 window.destroy();
                 std::process::exit(0)
             }
-            _ => Inhibit(true),
+            _ => {
+                Inhibit(true)
+            },
         }
     });
 
-    window.connect_enter_notify_event(|window, event| {
+    window.connect_enter_notify_event(|window, _event| {
         set_keyboard_interactivity(window, true);
         Inhibit(false)
     });
@@ -85,7 +87,7 @@ fn main() {
         .map(|entry| entry as Rc<RefCell<dyn GridButton>>)
         .collect::<Vec<_>>();
 
-    let mut app_grid = Rc::new(RefCell::new(grid::Grid::new(
+    let app_grid = Rc::new(RefCell::new(grid::Grid::new(
         buttons,
         grid::SHOW_ICON | grid::SHOW_LABEL,
         Rc::new(|entry| {
@@ -100,12 +102,12 @@ fn main() {
         let search_text = buf.get_text(&buf.get_start_iter(), &buf.get_end_iter(), false)
             .unwrap_or("".into());
 
-        if let Ok(mut grid) = cloned_app_grid.try_borrow_mut() {
+        if let Ok(grid) = cloned_app_grid.try_borrow() {
             println!("search text: {}", search_text);
-
             grid.filter(search_text.to_string());
         }
     });
+
 
     let search_input = TextView::new_with_buffer(&buffer);
     search_box.pack_start(&search_input, true, true, 0);

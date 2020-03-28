@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefCell};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::vec_deque::VecDeque;
 use std::rc::Rc;
@@ -28,9 +28,8 @@ pub trait GridButton {
 }
 
 pub struct Grid {
-    buttons: Vec<gtk::Button>,
+//    buttons: Vec<gtk::Button>,
     items: Vec<GridButtonRc>,
-    filter_string: String,
     pub window: GtkWindow,
     pub grid: GtkGrid,
 }
@@ -114,32 +113,30 @@ impl Grid {
         }
 
         Self {
-            buttons,
+//            buttons,
             items: local_items,
-            filter_string: String::from(""),
             window,
             grid,
         }
     }
 
-    pub fn filter(&mut self, needle: String) {
-        self.filter_string = needle;
-        self.update();
+    pub fn filter(&self, needle: String) {
+        self.update(needle);
     }
 
-    pub fn update(&self) {
+    pub fn update(&self, needle: String) {
         let mut sorted_entries = HashMap::with_capacity(self.items.len());
 
-        for (i, mut item) in self.items.iter().enumerate() {
+        for (i, item) in self.items.iter().enumerate() {
             let mut item = item.borrow_mut();
             let label = item.label().clone();
 
-            if self.filter_string == "" {
+            if needle == "" {
                 sorted_entries.insert(label, (item, true, i));
                 continue;
             }
 
-            if let Some(res) = fuzzy_match(self.filter_string.as_str(), label.as_str()) {
+            if let Some(res) = fuzzy_match(needle.as_str(), label.as_str()) {
                 item.set_display_label(fuzzy_format(&res, label.as_str(), "<span>", "</span>"));
                 sorted_entries.insert(label, (item, true, i));
                 continue;
