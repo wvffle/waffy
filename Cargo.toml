@@ -1,5 +1,5 @@
 [package]
-name = "waffy-rs"
+name = "waffy"
 version = "0.1.0"
 authors = ["Kasper Seweryn <github@wvffle.net>"]
 edition = "2018"
