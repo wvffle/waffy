@@ -45,6 +45,10 @@ window {
     background: alpha(#fff, .3);
 }
 
+.button-highlight {
+    color: #00aaff;
+}
+
 /* pywal colors */
 window.pywal {
     background: alpha(@background, .7);
@@ -56,4 +60,8 @@ window.pywal #apps > button {
 
 window.pywal #apps > button.active {
     background: @color5;
+}
+
+.button-highlight {
+    color: @color3;
 }

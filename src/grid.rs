@@ -140,20 +140,21 @@ impl Grid {
             }
 
             if let Some(res) = fuzzy_match(needle.as_str(), label.as_str()) {
-//                if self.flags & SHOW_LABEL > 0 {
-//                    let mut label_idx = 0;
-//
-//                    if self.flags & SHOW_ICON > 0 {
-//                        label_idx = 1;
-//                    }
-//
-//                    if  let Some(widget) = button.get_children().get(label_idx) {
-//                        if  let Some(gtklabel) = button.get_children().get(label_idx) {
-//                            let gtklabel: Label = widget.downcast().unwrap();
-//                            gtklabel.set_markup(fuzzy_format(&res, label.as_str(), "<span class=\"button-highlight\">", "</span>").as_str());
-//                        }
-//                    }
-//                }
+                let container = button.get_children().get(0).as_ref().unwrap();
+                let grid: gtk::Grid = container.downcast().unwrap();
+                for child in grid.get_children() {
+                    match child.downcast::<Label>() {
+                        Ok(label_widget) => {
+                            label_widget.set_markup(fuzzy_format(
+                                &res,
+                                label.as_str(),
+                                "<span class=\"button-highlight\">[[",
+                                "]]</span>"
+                            ).as_str());
+                        },
+                        Err(_) => {}
+                    }
+                }
 
                 sorted_entries.push(true);
                 continue;
