@@ -18,4 +18,5 @@ gtk = { git = "https://github.com/gtk-rs/gtk.git" }
 gdk = { git = "https://github.com/gtk-rs/gdk.git" }
 gdk-pixbuf = { git = "https://github.com/gtk-rs/gdk-pixbuf.git" }
 gio = { git = "https://github.com/gtk-rs/gio.git" }
+glib = { git = "https://github.com/gtk-rs/glib.git" }
 pango = { git = "https://github.com/gtk-rs/pango.git" }

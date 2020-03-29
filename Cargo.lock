@@ -978,6 +978,7 @@ dependencies = [
  "gdk",
  "gdk-pixbuf",
  "gio",
+ "glib",
  "gtk",
  "gtk-layer-shell-rs",
  "json5",
