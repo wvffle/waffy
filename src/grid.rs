@@ -105,27 +105,33 @@ impl Grid {
                 (callback)(item.clone());
             });
 
-            widget.connect_enter_notify_event(move |widget, _| {
-                gtk::Inhibit(true)
-            });
-
-            widget.connect_leave_notify_event(move |widget, _| {
-                gtk::Inhibit(true)
-            });
-
             widget.add(&content);
             grid.attach(&widget, col, row, 1, 1);
             buttons.push(widget);
         }
 
-        Self {
+        let mut res = Self {
             buttons,
             items: local_items,
             window,
             grid,
             flags,
             cursor: (0, 0)
+        };
+
+        for (i, widget) in buttons.iter().enumerate() {
+            widget.connect_enter_notify_event(move |widget, _| {
+                res.cursor_set_index(i);
+                gtk::Inhibit(true)
+            });
+
+            widget.connect_leave_notify_event(move |widget, _| {
+                res.cursor_hide();
+                gtk::Inhibit(true)
+            });
         }
+
+        res
     }
 
     pub fn filter(&self, needle: String) {
