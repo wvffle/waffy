@@ -29,9 +29,9 @@ fn main() {
     init_for_window(&window);
     set_layer(&window, Layer::Top);
     set_anchor(&window, Edge::Top, true);
-//    set_anchor(&window, Edge::Left, true);
-//    set_anchor(&window, Edge::Right, true);
-//    set_anchor(&window, Edge::Bottom, true);
+   set_anchor(&window, Edge::Left, true);
+   set_anchor(&window, Edge::Right, true);
+   set_anchor(&window, Edge::Bottom, true);
 
     window.connect_key_release_event(|window, key| {
         use gdk::enums::key;

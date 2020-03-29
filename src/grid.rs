@@ -23,12 +23,24 @@ pub trait GridButton {
     fn icon(&self) -> gtk::Image;
 }
 
+pub trait GridCursor {
+    fn cursor_left(&mut self);
+    fn cursor_right(&mut self);
+    fn cursor_up(&mut self);
+    fn cursor_down(&mut self);
+    fn cursor_hide(&self);
+    fn cursor_show(&self);
+    fn cursor_set_pos(&mut self, x: usize, y: usize);
+    fn cursor_set_index(&mut self, index: usize);
+}
+
 pub struct Grid {
     buttons: Vec<gtk::Button>,
     items: Vec<GridButtonRc>,
     pub window: GtkWindow,
     pub grid: GtkGrid,
     flags: u32,
+    cursor: (usize, usize),
 }
 
 impl Grid {
@@ -94,14 +106,10 @@ impl Grid {
             });
 
             widget.connect_enter_notify_event(move |widget, _| {
-                let ctx = widget.get_style_context();
-                ctx.add_class("active");
                 gtk::Inhibit(true)
             });
 
             widget.connect_leave_notify_event(move |widget, _| {
-                let ctx = widget.get_style_context();
-                ctx.remove_class("active");
                 gtk::Inhibit(true)
             });
 
@@ -115,7 +123,8 @@ impl Grid {
             items: local_items,
             window,
             grid,
-            flags
+            flags,
+            cursor: (0, 0)
         }
     }
 
@@ -147,6 +156,7 @@ impl Grid {
                     "]]"
                 );
 
+                // TODO: Label is not setting for some weird reason
                 item.display_label().set_label(name.as_str());
                 println!("{} {}", item.display_label().get_label().unwrap(), name.as_str());
 
@@ -176,3 +186,74 @@ impl Grid {
         self.grid.show();
     }
 }
+
+impl GridCursor for Grid {
+    fn cursor_left(&mut self) {
+        if self.cursor.0 > 0 {
+            self.cursor_set_pos(self.cursor.0 - 1, self.cursor.1)
+        }
+    }
+
+    fn cursor_right(&mut self) {
+        self.cursor_set_pos(self.cursor.0 + 1, self.cursor.1)
+    }
+
+    fn cursor_up(&mut self) {
+        if self.cursor.1 > 0 {
+            self.cursor_set_pos(self.cursor.0, self.cursor.1 - 1)
+        }
+    }
+
+    fn cursor_down(&mut self) {
+        self.cursor_set_pos(self.cursor.0, self.cursor.1 + 1)
+    }
+
+    fn cursor_hide(&self) {
+        let config = Config::get();
+        if let Some(widget) = self.buttons.get(self.cursor.1 * config.columns as usize + self.cursor.0) {
+            let ctx = widget.get_style_context();
+            ctx.remove_class("active");
+        }
+    }
+
+    fn cursor_show(&self) {
+        let config = Config::get();
+        if let Some(widget) = self.buttons.get(self.cursor.1 * config.columns as usize + self.cursor.0) {
+            let ctx = widget.get_style_context();
+            ctx.add_class("active");
+        }
+    }
+
+    fn cursor_set_pos(&mut self, x: usize, y: usize) {
+        let config = Config::get();
+
+        let idx = y * config.columns as usize + x;
+
+        let mut x_next = idx % config.columns as usize;
+        let mut y_next = idx / config.columns as usize;
+
+        let y_max = self.buttons.len() - 1;
+        if y_next > y_max {
+            y_next = y_max;
+        }
+
+        if self.cursor.0 != x_next && self.cursor.1 != y_next {
+            self.cursor_hide();
+
+            self.cursor.0 = x_next;
+            self.cursor.1 = y_next;
+
+            self.cursor_show();
+        }
+    }
+
+    fn cursor_set_index(&mut self, i: usize) {
+        let config = Config::get();
+
+        let x = i % config.columns as usize;
+        let y = i / config.columns as usize;
+
+        self.cursor_set_pos(x, y);
+    }
+}
+
