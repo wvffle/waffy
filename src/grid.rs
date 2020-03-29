@@ -150,7 +150,7 @@ impl Grid {
 
             if needle == "" {
                 sorted_entries.push(true);
-                button.set_label(&label);
+                item.display_label().set_label(&label);
                 continue;
             }
 
