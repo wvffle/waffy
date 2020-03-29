@@ -21,7 +21,6 @@ pub trait GridButton {
     fn label(&self) -> &String;
     fn display_label(&self) -> gtk::Label;
     fn icon(&self) -> gtk::Image;
-    fn set_display_label(&mut self, label: String);
 }
 
 pub struct Grid {

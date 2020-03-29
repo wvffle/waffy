@@ -176,8 +176,4 @@ impl GridButton for DesktopEntry {
         // gtk::IconSize::Dialog is 48x48
         Image::new_from_icon_name(Some("application-x-executable"), gtk::IconSize::Dialog)
     }
-
-    fn set_display_label(&mut self, label: String) {
-        self.display_name = label;
-    }
 }
