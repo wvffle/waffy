@@ -1,8 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use gtk::{ButtonExt, ContainerExt, Grid as GtkGrid, GridExt, LabelExt, ScrolledWindow as GtkWindow, StyleContextExt, Viewport as GtkViewport, WidgetExt, Label};
-use glib::object::Cast;
+use gtk::{ButtonExt, ContainerExt, Grid as GtkGrid, GridExt, LabelExt, ScrolledWindow as GtkWindow, StyleContextExt, Viewport as GtkViewport, WidgetExt};
 
 use sublime_fuzzy::{
     best_match as fuzzy_match,
@@ -119,7 +118,7 @@ impl Grid {
             cursor: (0, 0)
         };
 
-        for (i, widget) in buttons.iter().enumerate() {
+        for (i, widget) in res.buttons.iter().enumerate() {
             widget.connect_enter_notify_event(move |widget, _| {
                 res.cursor_set_index(i);
                 gtk::Inhibit(true)
