@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/waffy.iml" filepath="$PROJECT_DIR$/.idea/waffy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/waffy-rs.iml" filepath="$PROJECT_DIR$/.idea/waffy-rs.iml" />
     </modules>
   </component>
 </project>

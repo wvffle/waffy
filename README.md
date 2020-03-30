@@ -4,7 +4,7 @@ Wayland compatible, touch friendly application launcher
 ![waffy-screenshot](https://i.imgur.com/iyEQVqo.png)
 
 ## Features
-- sway dedicated launcher
+- wlroots dedicated launcher
 - Touch support
 - Read all application locations
 - Respect hidden apps
@@ -18,18 +18,5 @@ Wayland compatible, touch friendly application launcher
 ```shell script
 git clone https://github.com/wvffle/waffy.git
 cd waffy
-cmake -Bcmake-build-release -H. -DCMAKE_BUILD_TYPE=Release
-cmake --build cmake-build-release --target all
+cargo build --release
 ```
-
-### Add to path
-```shell script
-echo "export PATH=$HOME/.local/share/waffy:$PATH" >> $HOME/.bash_profile
-# or
-sudo ln -s $HOME/.local/share/waffy/waffy /usr/local/bin/waffy
-```
-
-
-
-## Other information
-- [Studies project info](/docs/project.md)
