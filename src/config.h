@@ -10,9 +10,9 @@
 #include <stdio.h>
 #include "utils.h"
 
-long config_columns;
-long config_wal;
-char* config_prompt;
+extern long config_columns;
+extern long config_wal;
+extern char* config_prompt;
 
 // Write current config to the file
 void write_config();
